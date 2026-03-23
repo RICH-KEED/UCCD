@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UCCD — Master Team Roadmap</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#0D1117;--surface:#161B22;--border:#21262D;--accent:#58A6FF;--green:#3FB950;--amber:#D29922;--red:#F85149;--purple:#BC8CFF;--text:#C9D1D9;--muted:#8B949E;--white:#F0F6FC;
+  --akash:#58A6FF;--abhineet:#BC8CFF;--hemnat:#3FB950;--pritesh:#D29922;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;}
+.page{max-width:1000px;margin:0 auto;padding:40px 32px;}
+.header{border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:32px;text-align:center;}
+.header h1{font-size:32px;font-weight:700;color:var(--white);margin-bottom:6px;}
+.header p{font-size:14px;color:var(--muted);}
+.section{margin-bottom:48px;}
+.section-title{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* team cards */
+.team-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:32px;}
+.member-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center;}
+.member-avatar{width:48px;height:48px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;}
+.member-name{font-size:14px;font-weight:700;color:var(--white);margin-bottom:3px;}
+.member-role{font-size:11px;color:var(--muted);margin-bottom:10px;}
+.member-stack{font-size:10px;font-family:'IBM Plex Mono';color:var(--muted);line-height:1.6;}
+.member-link{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:10px;font-family:'IBM Plex Mono';text-decoration:none;padding:7px 12px;border-radius:999px;border:1px solid var(--border);background:linear-gradient(180deg,#1D2430,#141A23);color:var(--white);box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 0 0 1px rgba(0,0,0,.2);text-transform:uppercase;letter-spacing:.04em;transition:all .18s ease;}
+.member-link::before{content:'↗';font-size:10px;opacity:.9;}
+.member-link:hover{transform:translateY(-1px);}
+.ml-akash{border-color:rgba(88,166,255,.45);box-shadow:0 0 0 1px rgba(88,166,255,.20) inset,0 6px 16px rgba(88,166,255,.16);}
+.ml-akash:hover{border-color:rgba(88,166,255,.8);box-shadow:0 0 0 1px rgba(88,166,255,.35) inset,0 8px 18px rgba(88,166,255,.25);}
+.ml-abhineet{border-color:rgba(188,140,255,.45);box-shadow:0 0 0 1px rgba(188,140,255,.20) inset,0 6px 16px rgba(188,140,255,.16);}
+.ml-abhineet:hover{border-color:rgba(188,140,255,.8);box-shadow:0 0 0 1px rgba(188,140,255,.35) inset,0 8px 18px rgba(188,140,255,.25);}
+.ml-hemnat{border-color:rgba(63,185,80,.45);box-shadow:0 0 0 1px rgba(63,185,80,.20) inset,0 6px 16px rgba(63,185,80,.16);}
+.ml-hemnat:hover{border-color:rgba(63,185,80,.8);box-shadow:0 0 0 1px rgba(63,185,80,.35) inset,0 8px 18px rgba(63,185,80,.25);}
+.ml-pritesh{border-color:rgba(210,153,34,.45);box-shadow:0 0 0 1px rgba(210,153,34,.20) inset,0 6px 16px rgba(210,153,34,.16);}
+.ml-pritesh:hover{border-color:rgba(210,153,34,.8);box-shadow:0 0 0 1px rgba(210,153,34,.35) inset,0 8px 18px rgba(210,153,34,.25);}
+
+/* gantt */
+.gantt{overflow-x:auto;}
+.gantt-table{width:100%;border-collapse:collapse;min-width:800px;}
+.gantt-table th{background:var(--surface);color:var(--muted);padding:8px 12px;text-align:center;font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--border);font-family:'IBM Plex Mono';}
+.gantt-table th.person-col{text-align:left;width:140px;}
+.gantt-table td{padding:6px 4px;border:1px solid var(--border);vertical-align:middle;}
+.gantt-table td.person-cell{padding:8px 12px;font-size:12px;font-weight:600;color:var(--white);background:var(--surface);}
+.gantt-bar{border-radius:4px;padding:5px 8px;font-size:10px;font-weight:600;color:#fff;text-align:center;line-height:1.2;white-space:nowrap;overflow:hidden;}
+.empty-cell{background:var(--bg);}
+
+/* dep table */
+.dep-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.dep-table th{background:var(--surface);color:var(--muted);padding:8px 12px;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.dep-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top;}
+.dep-table tr:last-child td{border-bottom:none;}
+.dep-table td code{font-family:'IBM Plex Mono';font-size:11px;}
+.blocker{color:var(--red);font-weight:600;}
+.needs{color:var(--amber);}
+.provides{color:var(--green);}
+
+/* week breakdown */
+.week-row{display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px;align-items:start;}
+.week-label{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:var(--muted);padding-top:8px;text-align:right;padding-right:8px;}
+.person-week{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px;}
+.pw-name{font-size:10px;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;}
+.pw-item{font-size:11px;color:var(--muted);margin-bottom:3px;display:flex;gap:5px;align-items:flex-start;}
+.pw-item::before{content:'·';color:var(--accent);flex-shrink:0;}
+.pw-critical{background:rgba(248,81,73,.06);border-color:rgba(248,81,73,.3);}
+.pw-name-critical{color:var(--red);}
+
+/* rules */
+.rule-list{list-style:none;}
+.rule-list li{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.rule-list li:last-child{border-bottom:none;}
+.rule-icon{font-size:16px;flex-shrink:0;}
+.rule-text{font-size:13px;color:var(--muted);line-height:1.5;}
+.rule-text strong{color:var(--white);}
+
+/* folder map */
+.folder-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.folder-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+.folder-owner{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;}
+.folder-list{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);line-height:1.9;}
+.folder-list .dir{color:var(--accent);}
+.folder-list .file{color:var(--text);}
+.folder-list .comment{color:var(--muted);font-size:10px;}
+
+/* top nav */
+.top-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.top-link{font-family:'IBM Plex Mono';font-size:11px;text-decoration:none;color:var(--muted);padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .2s ease;}
+.top-link:hover{color:var(--white);border-color:rgba(88,166,255,.45);}
+.nav-status{font-size:11px;color:var(--accent);font-family:'IBM Plex Mono';margin:-4px 0 16px;}
+
+p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="top-nav" aria-label="Roadmap Pages">
+    <a class="top-link" href="Roadmap_Akash.html">Akash</a>
+    <a class="top-link" href="Roadmap_Abhineet.html">Abhineet</a>
+    <a class="top-link" href="Roadmap_Hemnat.html">Hemnat</a>
+    <a class="top-link" href="Roadmap_Pritesh.html">Pritesh</a>
+  </nav>
+  <div class="nav-status">You are viewing: Master Team Roadmap</div>
+
+  <div class="header">
+    <h1>UCCD — Master Team Roadmap</h1>
+    <p>6-week demo build · 4 team members · Complete dependency map · Week-by-week breakdown</p>
+    <p style="margin-top:6px;">Project Start Date: 23 March 2026</p>
+  </div>
+
+  <!-- TEAM -->
+  <div class="section">
+    <div class="section-title">The Team</div>
+    <div class="team-grid">
+      <div class="member-card" style="border-top:3px solid var(--akash);">
+        <div class="member-avatar" style="background:rgba(88,166,255,.2);color:var(--akash);">AK</div>
+        <div class="member-name">Akash</div>
+        <div class="member-role">ML Engineer + Backend Infra</div>
+        <div class="member-stack">Kafka · PostgreSQL<br>pgvector · HuggingFace<br>scikit-learn · sentence-transformers</div>
+        <a class="member-link ml-akash" href="Roadmap_Akash.html">View Personal Roadmap</a>
+      </div>
+      <div class="member-card" style="border-top:3px solid var(--abhineet);">
+        <div class="member-avatar" style="background:rgba(188,140,255,.2);color:var(--abhineet);">AB</div>
+        <div class="member-name">Abhineet</div>
+        <div class="member-role">AI Engineer + Backend API</div>
+        <div class="member-stack">FastAPI · Claude API<br>LangGraph · SQLAlchemy<br>WebSocket · Python</div>
+        <a class="member-link ml-abhineet" href="Roadmap_Abhineet.html">View Personal Roadmap</a>
+      </div>
+      <div class="member-card" style="border-top:3px solid var(--hemnat);">
+        <div class="member-avatar" style="background:rgba(63,185,80,.2);color:var(--hemnat);">HM</div>
+        <div class="member-name">Hemnat</div>
+        <div class="member-role">Frontend Engineer</div>
+        <div class="member-stack">React · TypeScript<br>Recharts · Axios<br>WebSocket · CSS</div>
+        <a class="member-link ml-hemnat" href="Roadmap_Hemnat.html">View Personal Roadmap</a>
+      </div>
+      <div class="member-card" style="border-top:3px solid var(--pritesh);">
+        <div class="member-avatar" style="background:rgba(210,153,34,.2);color:var(--pritesh);">PR</div>
+        <div class="member-name">Pritesh</div>
+        <div class="member-role">Auth · SLA · DevOps · QA</div>
+        <div class="member-stack">Redis · JWT · Docker<br>APScheduler · pytest<br>Makefile</div>
+        <a class="member-link ml-pritesh" href="Roadmap_Pritesh.html">View Personal Roadmap</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK BY WEEK -->
+  <div class="section">
+    <div class="section-title">Week-by-Week — What Everyone Does</div>
+
+    <div class="week-row">
+      <div class="week-label">WEEK 1</div>
+      <div class="person-week pw-critical">
+        <div class="pw-name pw-name-critical" style="color:var(--akash);">Akash ⚠ CRITICAL</div>
+        <div class="pw-item">Kafka setup — topics, producer, BaseConsumer</div>
+        <div class="pw-item">PostgreSQL + pgvector schema + Alembic migration</div>
+        <div class="pw-item">docker-compose.yml (Kafka + Postgres sections)</div>
+        <div class="pw-item">Share docker-compose + db/connection.py by Day 5</div>
+      </div>
+      <div class="person-week pw-critical">
+        <div class="pw-name pw-name-critical" style="color:var(--abhineet);">Abhineet ⚠ CRITICAL</div>
+        <div class="pw-item">FastAPI project setup + folder structure</div>
+        <div class="pw-item">SQLAlchemy ORM models for complaints + users</div>
+        <div class="pw-item">Mock API endpoints — POST/GET /complaints</div>
+        <div class="pw-item">Share Swagger URL with Hemnat by Day 5</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--hemnat);">Hemnat</div>
+        <div class="pw-item">Vite + React + TypeScript project setup</div>
+        <div class="pw-item">Design tokens CSS variables file</div>
+        <div class="pw-item">Sidebar + Router + API client setup</div>
+        <div class="pw-item">Login screen (mock auth)</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--pritesh);">Pritesh</div>
+        <div class="pw-item">Redis + API services in docker-compose.yml</div>
+        <div class="pw-item">Dockerfile for FastAPI app</div>
+        <div class="pw-item">Makefile (make up / down / test)</div>
+        <div class="pw-item">src/config.py — central env config</div>
+      </div>
+    </div>
+
+    <div class="week-row">
+      <div class="week-label">WEEK 2</div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--akash);">Akash</div>
+        <div class="pw-item">Complaint DNA — sentence embeddings</div>
+        <div class="pw-item">pgvector similarity search query</div>
+        <div class="pw-item">Cluster assignment logic</div>
+        <div class="pw-item">DNAConsumer Kafka consumer</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--abhineet);">Abhineet</div>
+        <div class="pw-item">Claude API NLP Classifier agent</div>
+        <div class="pw-item">4-dimension complaint classification</div>
+        <div class="pw-item">NLPConsumer Kafka consumer</div>
+        <div class="pw-item">JSON output parsing + error handling</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--hemnat);">Hemnat</div>
+        <div class="pw-item">My Queue screen — list + SLA timers</div>
+        <div class="pw-item">Complaint Detail — all 3 columns</div>
+        <div class="pw-item">EmotionArcChart component (Recharts)</div>
+        <div class="pw-item">AI Draft panel + Send Response</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--pritesh);">Pritesh</div>
+        <div class="pw-item">JWT auth — login endpoint</div>
+        <div class="pw-item">User model + seeded test users</div>
+        <div class="pw-item">get_current_user dependency</div>
+        <div class="pw-item">Role-based access (AGENT/SUPERVISOR/COMPLIANCE)</div>
+      </div>
+    </div>
+
+    <div class="week-row">
+      <div class="week-label">WEEK 3</div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--akash);">Akash</div>
+        <div class="pw-item">Severity Scorer — weighted formula</div>
+        <div class="pw-item">4 SLA tier boundaries</div>
+        <div class="pw-item">SeverityConsumer Kafka consumer</div>
+        <div class="pw-item">Unit tests for all tier boundaries</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--abhineet);">Abhineet</div>
+        <div class="pw-item">LangGraph orchestrator — all 6 agents parallel</div>
+        <div class="pw-item">ComplaintState TypedDict</div>
+        <div class="pw-item">Root Cause agent (simple version)</div>
+        <div class="pw-item">Pipeline timing tests</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--hemnat);">Hemnat</div>
+        <div class="pw-item">Supervisor Command Centre — full screen</div>
+        <div class="pw-item">KPI bar (5 stat cards)</div>
+        <div class="pw-item">Escalation queue table</div>
+        <div class="pw-item">Agent load bars + LIVE dot</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--pritesh);">Pritesh</div>
+        <div class="pw-item">Redis SLA engine — set_sla_timer</div>
+        <div class="pw-item">Background job — check_all_slas every 60s</div>
+        <div class="pw-item">50/75/90% threshold alerts</div>
+        <div class="pw-item">Breach detection — update DB status</div>
+      </div>
+    </div>
+
+    <div class="week-row">
+      <div class="week-label">WEEK 4</div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--akash);">Akash</div>
+        <div class="pw-item">Emotion Arc — HuggingFace sentiment model</div>
+        <div class="pw-item">Per-turn trajectory tracking</div>
+        <div class="pw-item">Slope + escalation signal + tone recommendation</div>
+        <div class="pw-item">EmotionConsumer Kafka consumer</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--abhineet);">Abhineet</div>
+        <div class="pw-item">Draft Response Generator (Claude)</div>
+        <div class="pw-item">Tone-matching from emotion arc</div>
+        <div class="pw-item">WebSocket server — ConnectionManager</div>
+        <div class="pw-item">Real-time push for supervisor events</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--hemnat);">Hemnat</div>
+        <div class="pw-item">Regulatory Dashboard screen</div>
+        <div class="pw-item">Deadline countdown cards</div>
+        <div class="pw-item">Insights Trend Dashboard</div>
+        <div class="pw-item">Multi-line chart + heatmap grid</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--pritesh);">Pritesh</div>
+        <div class="pw-item">Agent load tracking in Redis</div>
+        <div class="pw-item">get_best_agent routing logic</div>
+        <div class="pw-item">Regulatory deadline tracker</div>
+        <div class="pw-item">Agent overload alerts via WebSocket</div>
+      </div>
+    </div>
+
+    <div class="week-row">
+      <div class="week-label">WEEK 5</div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--akash);">Akash</div>
+        <div class="pw-item">Breach prediction model — generate synthetic data</div>
+        <div class="pw-item">Train RandomForest + save .pkl</div>
+        <div class="pw-item">EscalationConsumer — write breach_probability to DB</div>
+        <div class="pw-item">Publish to escalations.predicted topic</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--abhineet);">Abhineet</div>
+        <div class="pw-item">All remaining API endpoints (analytics, simulation, escalations)</div>
+        <div class="pw-item">CORS middleware — allow localhost:3000</div>
+        <div class="pw-item">Request logging middleware</div>
+        <div class="pw-item">Error handling — 404, 422, 500</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--hemnat);">Hemnat</div>
+        <div class="pw-item">WebSocket hook — useWebSocket.ts</div>
+        <div class="pw-item">Real-time escalation queue updates</div>
+        <div class="pw-item">Simulation Sandbox screen</div>
+        <div class="pw-item">Toast notifications component</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--pritesh);">Pritesh</div>
+        <div class="pw-item">Write full test suite — auth, complaints, SLA</div>
+        <div class="pw-item">Integration test — full end-to-end flow</div>
+        <div class="pw-item">make test command — all tests pass</div>
+        <div class="pw-item">Fix any test failures with team</div>
+      </div>
+    </div>
+
+    <div class="week-row">
+      <div class="week-label">WEEK 6</div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--akash);">Akash</div>
+        <div class="pw-item">End-to-end integration — all consumers running</div>
+        <div class="pw-item">Demo complaints preparation (5 specific scenarios)</div>
+        <div class="pw-item">Fix race conditions in parallel writes</div>
+        <div class="pw-item">Model documentation</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--abhineet);">Abhineet</div>
+        <div class="pw-item">Seed demo data script — 20 realistic complaints</div>
+        <div class="pw-item">Full end-to-end test with real data</div>
+        <div class="pw-item">Fix API issues reported by Hemnat</div>
+        <div class="pw-item">Final Swagger docs check</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--hemnat);">Hemnat</div>
+        <div class="pw-item">Complaint Search screen</div>
+        <div class="pw-item">Loading skeletons + empty states</div>
+        <div class="pw-item">Polish at 1280×800 viewport</div>
+        <div class="pw-item">Practice full demo flow</div>
+      </div>
+      <div class="person-week">
+        <div class="pw-name" style="color:var(--pritesh);">Pritesh</div>
+        <div class="pw-item">Fresh clone test — make up from scratch</div>
+        <div class="pw-item">SLA timer demo scenario setup</div>
+        <div class="pw-item">All tests pass — make test</div>
+        <div class="pw-item">README.md for GitHub</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEPENDENCIES -->
+  <div class="section">
+    <div class="section-title">Critical Dependencies — Who Needs What from Whom</div>
+    <table class="dep-table">
+      <thead><tr><th>Person</th><th>Needs from</th><th>What exactly</th><th>By when</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong style="color:var(--abhineet);">Abhineet</strong></td>
+          <td><strong style="color:var(--akash);">Akash</strong></td>
+          <td><code>db/connection.py</code> — SQLAlchemy session factory to use in FastAPI routes</td>
+          <td class="blocker">Week 1, Day 5 ⚠</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--hemnat);">Hemnat</strong></td>
+          <td><strong style="color:var(--abhineet);">Abhineet</strong></td>
+          <td>Swagger docs URL + mock endpoint responses so he can define TypeScript types and start building screens</td>
+          <td class="blocker">Week 1, Day 5 ⚠</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--hemnat);">Hemnat</strong></td>
+          <td><strong style="color:var(--pritesh);">Pritesh</strong></td>
+          <td>Working POST <code>/auth/login</code> endpoint so he can connect real login instead of mock token</td>
+          <td class="needs">Week 2 end</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--abhineet);">Abhineet</strong></td>
+          <td><strong style="color:var(--akash);">Akash</strong></td>
+          <td><code>kafka/base_consumer.py</code> to extend for NLP classifier consumer</td>
+          <td class="needs">Week 2, Day 1</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--abhineet);">Abhineet</strong></td>
+          <td><strong style="color:var(--akash);">Akash</strong></td>
+          <td><code>agents/emotion_agent.py</code> — needs <code>emotion_arc</code> output to determine tone for draft response</td>
+          <td class="needs">Week 4 end</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--pritesh);">Pritesh</strong></td>
+          <td><strong style="color:var(--abhineet);">Abhineet</strong></td>
+          <td><code>api/websocket.py</code> ConnectionManager — Pritesh's SLA alerts call <code>manager.broadcast()</code></td>
+          <td class="needs">Week 4, Day 3</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--akash);">Akash</strong></td>
+          <td><strong style="color:var(--pritesh);">Pritesh</strong></td>
+          <td>Redis running in docker-compose — breach predictor queries Redis for queue_depth and agents_available</td>
+          <td class="needs">Week 1 end</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--hemnat);">Hemnat</strong></td>
+          <td><strong style="color:var(--pritesh);">Pritesh</strong></td>
+          <td><code>get_sla_status(complaint_id)</code> function results via API — powers frontend countdown timers</td>
+          <td class="needs">Week 3 end</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--abhineet);">Abhineet</strong></td>
+          <td><strong style="color:var(--akash);">Akash</strong></td>
+          <td><code>translation_service.translate()</code> function from <code>services/translation_service.py</code></td>
+          <td class="needs">Week 4, Day 1</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--hemnat);">Hemnat</strong></td>
+          <td><strong style="color:var(--abhineet);">Abhineet</strong></td>
+          <td>GET <code>/api/v1/ai/translate-preview</code> endpoint for TranslationPreview component</td>
+          <td class="needs">Week 5, Day 1</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FOLDER MAP -->
+  <div class="section">
+    <div class="section-title">Repo Folder Ownership — Who Owns What</div>
+    <div class="folder-grid">
+      <div class="folder-card" style="border-top:3px solid var(--akash);">
+        <div class="folder-owner" style="color:var(--akash);">Akash owns</div>
+        <div class="folder-list">
+          <div class="dir">kafka/</div>
+          <div class="file">  producer.py</div>
+          <div class="file">  base_consumer.py</div>
+          <div class="dir">db/</div>
+          <div class="file">  schema.sql</div>
+          <div class="file">  connection.py</div>
+          <div class="dir">services/</div>
+          <div class="file">  translation_service.py</div>
+          <div class="dir">agents/</div>
+          <div class="file">  translation_consumer.py</div>
+          <div class="file">  dna_agent.py</div>
+          <div class="file">  severity_agent.py</div>
+          <div class="file">  emotion_agent.py</div>
+          <div class="file">  escalation_agent.py</div>
+          <div class="dir">ml/</div>
+          <div class="file">  generate_training_data.py</div>
+          <div class="file">  train_breach_model.py</div>
+          <div class="file">  breach_predictor.pkl</div>
+          <div class="file">docker-compose.yml <span class="comment">← shared with Pritesh</span></div>
+        </div>
+      </div>
+      <div class="folder-card" style="border-top:3px solid var(--abhineet);">
+        <div class="folder-owner" style="color:var(--abhineet);">Abhineet owns</div>
+        <div class="folder-list">
+          <div class="dir">api/</div>
+          <div class="file">  main.py</div>
+          <div class="dir">  models/</div>
+          <div class="file">    complaint.py</div>
+          <div class="dir">  routes/</div>
+          <div class="file">    complaints.py</div>
+          <div class="file">    analytics.py</div>
+          <div class="file">  schemas/</div>
+          <div class="file">  websocket.py</div>
+          <div class="dir">agents/</div>
+          <div class="file">  nlp_classifier.py</div>
+          <div class="file">  orchestrator.py</div>
+          <div class="file">  root_cause_agent.py</div>
+          <div class="file">  state.py</div>
+          <div class="dir">services/</div>
+          <div class="file">  draft_service.py</div>
+          <div class="file">  translation_service.py <span class="comment">← Akash owns this; import only, never edit</span></div>
+          <div class="dir">scripts/</div>
+          <div class="file">  seed_demo.py</div>
+        </div>
+      </div>
+      <div class="folder-card" style="border-top:3px solid var(--hemnat);">
+        <div class="folder-owner" style="color:var(--hemnat);">Hemnat owns</div>
+        <div class="folder-list">
+          <div class="dir">frontend/</div>
+          <div class="dir">  src/</div>
+          <div class="dir">    pages/</div>
+          <div class="file">      LoginPage.tsx</div>
+          <div class="file">      QueuePage.tsx</div>
+          <div class="file">      ComplaintDetail.tsx</div>
+          <div class="file">      SupervisorHQ.tsx</div>
+          <div class="file">      RegulatoryView.tsx</div>
+          <div class="file">      InsightsBoard.tsx</div>
+          <div class="file">      SimulationPage.tsx</div>
+          <div class="dir">    components/</div>
+          <div class="dir">    api/</div>
+          <div class="dir">    hooks/</div>
+          <div class="dir">    types/</div>
+          <div class="file">    styles/tokens.css</div>
+        </div>
+      </div>
+      <div class="folder-card" style="border-top:3px solid var(--pritesh);">
+        <div class="folder-owner" style="color:var(--pritesh);">Pritesh owns</div>
+        <div class="folder-list">
+          <div class="file">docker-compose.yml <span class="comment">← shared with Akash</span></div>
+          <div class="file">Dockerfile</div>
+          <div class="file">Makefile</div>
+          <div class="file">README.md</div>
+          <div class="file">src/config.py</div>
+          <div class="dir">api/</div>
+          <div class="file">  auth.py</div>
+          <div class="dir">  models/</div>
+          <div class="file">    user.py</div>
+          <div class="dir">services/</div>
+          <div class="file">  sla_service.py</div>
+          <div class="file">  agent_service.py</div>
+          <div class="file">  regulatory_service.py</div>
+          <div class="dir">tests/</div>
+          <div class="file">  test_auth.py</div>
+          <div class="file">  test_complaints.py</div>
+          <div class="file">  test_sla.py</div>
+          <div class="file">  test_integration.py</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GIT RULES -->
+  <div class="section">
+    <div class="section-title">Git Rules — How to Work Without Breaking Each Other</div>
+    <ul class="rule-list">
+      <li>
+        <span class="rule-icon">🌿</span>
+        <div class="rule-text"><strong>Never commit to main directly.</strong> Each person works on their own branch: <code>feature/akash-ml-pipeline</code>, <code>feature/abhineet-api-ai</code>, <code>feature/hemnat-frontend</code>, <code>feature/pritesh-auth-sla-devops</code>. Create a PR to merge into main at end of each week.</div>
+      </li>
+      <li>
+        <span class="rule-icon">📁</span>
+        <div class="rule-text"><strong>Never edit someone else's files.</strong> If you need a function from another person's file, import it — don't copy it. If you need them to add something, tell them in WhatsApp and they add it to their file.</div>
+      </li>
+      <li>
+        <span class="rule-icon">🔗</span>
+        <div class="rule-text"><strong>The one shared file is docker-compose.yml.</strong> Akash owns Kafka + Postgres sections. Pritesh owns Redis + API sections. Always pull before editing this file and coordinate on WhatsApp before pushing changes to it.</div>
+      </li>
+      <li>
+        <span class="rule-icon">🚨</span>
+        <div class="rule-text"><strong>Week 1 is the most critical.</strong> Akash's <code>db/connection.py</code> and Abhineet's mock API endpoints MUST be pushed by Day 5 of Week 1. If either slips, Hemnat and Pritesh are blocked. This is the single most important deadline.</div>
+      </li>
+      <li>
+        <span class="rule-icon">🔔</span>
+        <div class="rule-text"><strong>When you push something others depend on, message the team immediately.</strong> "Akash: db/connection.py pushed, docker-compose updated — pull and run make up to test". Don't assume they'll see it.</div>
+      </li>
+      <li>
+        <span class="rule-icon">✅</span>
+        <div class="rule-text"><strong>End of every week: run make test.</strong> Before merging your PR to main, all tests must pass. If Pritesh's tests fail because of your code, fix it before merging.</div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- DEMO FLOW -->
+  <div class="section">
+    <div class="section-title">Demo Flow for Judges — 2 Minutes</div>
+    <p>This is the exact sequence to demo when presenting. Practice it until it takes exactly 2 minutes.</p>
+    <ul class="rule-list">
+      <li><span class="rule-icon">1</span><div class="rule-text"><strong>Login screen</strong> → log in as Supervisor. (5 sec)</div></li>
+      <li><span class="rule-icon">2</span><div class="rule-text"><strong>Supervisor HQ</strong> → show live KPI bar (1,284 open, 23 breached, 61 predicted). Point to the "AI PREDICTED" count and say "these haven't breached yet — UCCD flagged them before the deadline." (20 sec)</div></li>
+      <li><span class="rule-icon">3</span><div class="rule-text"><strong>Escalation queue</strong> → show one BREACH row + one PREDICT row. Click the PREDICT complaint. (10 sec)</div></li>
+      <li><span class="rule-icon">4</span><div class="rule-text"><strong>Complaint Detail</strong> → point to emotion arc chart trending downward (red). Point to the teal "🌐 Urdu" language badge next to customer name and say "this complaint came in Urdu, UCCD detected and translated it automatically." Point to AI draft already written. Point to triage panel showing breach probability 82% in red. Show the translation preview below the draft and say "when the agent clicks Send, the customer receives this in Urdu — the agent never had to speak the language." (25 sec)</div></li>
+      <li><span class="rule-icon">5</span><div class="rule-text"><strong>Log out, log in as Agent.</strong> Open My Queue. Show SLA countdowns. Open a complaint, edit AI draft slightly, click Send Response. (20 sec)</div></li>
+      <li><span class="rule-icon">6</span><div class="rule-text"><strong>Insights Board</strong> → show trend chart. Say "47 complaints share the same DNA cluster — same root cause." (15 sec)</div></li>
+      <li><span class="rule-icon">7</span><div class="rule-text"><strong>Simulation Sandbox</strong> → set condition "complaint_type = billing AND amount &lt; 1000", click Run. Show "2,847 complaints would resolve, ₹5.1 Lakh cost saving." (15 sec)</div></li>
+      <li><span class="rule-icon">8</span><div class="rule-text"><strong>Regulatory Dashboard</strong> → show deadline countdowns, point to auto-populated RBI report. (10 sec)</div></li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

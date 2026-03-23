@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pritesh — UCCD Roadmap</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#0D1117;--surface:#161B22;--border:#21262D;--accent:#58A6FF;--green:#3FB950;--amber:#D29922;--red:#F85149;--purple:#BC8CFF;--teal:#39D353;--text:#C9D1D9;--muted:#8B949E;--white:#F0F6FC;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;}
+.page{max-width:900px;margin:0 auto;padding:40px 32px;}
+.header{border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:32px;}
+.role-badge{display:inline-block;background:rgba(210,153,34,.12);border:1px solid rgba(210,153,34,.3);color:var(--amber);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;font-family:'IBM Plex Mono';margin-bottom:12px;}
+.name{font-size:32px;font-weight:700;color:var(--white);margin-bottom:4px;}
+.project{font-size:14px;color:var(--muted);}
+.meta-row{display:flex;gap:24px;margin-top:16px;flex-wrap:wrap;}
+.meta-item{font-size:12px;color:var(--muted);}.meta-item span{color:var(--text);font-weight:600;}
+.section{margin-bottom:40px;}
+.section-title{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.week{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;}
+.week-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);}
+.week-num{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:var(--muted);}
+.week-title{font-size:15px;font-weight:600;color:var(--white);}
+.week-days{margin-left:auto;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono';}
+.week-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.week-body{padding:16px;}
+.module{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.module:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.module-name{font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.module-badge{font-size:10px;font-weight:600;padding:1px 7px;border-radius:3px;font-family:'IBM Plex Mono';}
+.mb-auth{background:rgba(248,81,73,.15);color:var(--red);}
+.mb-redis{background:rgba(210,153,34,.15);color:var(--amber);}
+.mb-docker{background:rgba(88,166,255,.15);color:var(--accent);}
+.mb-test{background:rgba(63,185,80,.15);color:var(--green);}
+.steps{margin-top:10px;}
+.step{display:flex;gap:10px;margin-bottom:6px;align-items:flex-start;}
+.step-num{min-width:20px;height:20px;background:var(--border);border-radius:50%;font-size:10px;font-weight:700;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-family:'IBM Plex Mono';}
+.step-text{font-size:12.5px;color:var(--muted);line-height:1.5;}
+.step-text code{color:var(--accent);font-family:'IBM Plex Mono';font-size:11px;background:rgba(88,166,255,.08);padding:1px 5px;border-radius:3px;}
+.step-text strong{color:var(--text);}
+.install{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-top:8px;font-family:'IBM Plex Mono';font-size:12px;color:var(--green);}
+.install-label{font-size:10px;color:var(--muted);margin-bottom:6px;}
+.note{background:rgba(210,153,34,.06);border:1px solid rgba(210,153,34,.2);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--amber);margin-top:10px;}
+.io-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.io-box{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;}
+.io-label{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px;}
+.io-in{color:var(--amber);}.io-out{color:var(--green);}
+.io-box ul{padding-left:14px;}
+.io-box li{font-size:12px;color:var(--muted);margin-bottom:3px;}
+.io-box li code{color:var(--text);font-family:'IBM Plex Mono';font-size:11px;}
+.sum-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.sum-table th{background:var(--surface);color:var(--muted);padding:8px 12px;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.sum-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);}
+.sum-table tr:last-child td{border-bottom:none;}
+.sum-table td code{font-family:'IBM Plex Mono';font-size:11px;color:var(--accent);}
+
+/* top nav */
+.top-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.top-link{font-family:'IBM Plex Mono';font-size:11px;text-decoration:none;color:var(--muted);padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .2s ease;}
+.top-link:hover{color:var(--white);border-color:rgba(88,166,255,.45);}
+.top-link.master{color:var(--accent);border-color:rgba(88,166,255,.35);}
+.top-link.active{color:var(--white);border-color:rgba(210,153,34,.75);background:rgba(210,153,34,.16);box-shadow:0 0 0 1px rgba(210,153,34,.35) inset;font-weight:700;}
+.top-link.active::before{content:'• ';}
+
+p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="top-nav" aria-label="Roadmap Pages">
+    <a class="top-link master" href="Roadmap_Master.html">Master Roadmap</a>
+    <a class="top-link" href="Roadmap_Akash.html">Akash</a>
+    <a class="top-link" href="Roadmap_Abhineet.html">Abhineet</a>
+    <a class="top-link" href="Roadmap_Hemnat.html">Hemnat</a>
+    <a class="top-link active" aria-current="page" href="Roadmap_Pritesh.html">Pritesh</a>
+  </nav>
+
+  <div class="header">
+    <div class="role-badge">Auth · SLA Engine · DevOps · QA</div>
+    <div class="name">Pritesh</div>
+    <div class="project">UCCD — Unified Customer Complaint Communication Dashboard</div>
+    <div class="meta-row">
+      <div class="meta-item">Timeline: <span>6 Weeks</span></div>
+      <div class="meta-item">Modules: <span>6</span></div>
+      <div class="meta-item">Stack: <span>Python · Redis · JWT · Docker · pytest · APScheduler</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Your Responsibility</div>
+    <p>You own the cross-cutting concerns — the things that make the system actually work safely and correctly in production. Your 4 main areas: (1) JWT Authentication so users can log in with roles, (2) Redis SLA Engine that tracks deadlines and fires alerts, (3) Docker setup so the whole team can run everything with one command, (4) Testing and integration verification. You plug your modules into Abhineet's FastAPI app.</p>
+    <p><strong style="color:var(--white)">Key point:</strong> Your Docker Compose from Week 1 is shared with Akash's. Coordinate with him — one single <code>docker-compose.yml</code> that includes all services: Kafka + Zookeeper + PostgreSQL + Redis + the FastAPI app.</p>
+  </div>
+
+  <!-- WEEK 1 -->
+  <div class="section">
+    <div class="section-title">Week 1 — Docker + Full Stack Local Setup</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#58A6FF;"></div>
+        <div class="week-num">WEEK 01</div>
+        <div class="week-title">Complete docker-compose.yml + Redis Setup</div>
+        <div class="week-days">Days 1–7</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-docker">DOCKER</span>Module 1 — Full Stack Docker Compose</div>
+          <p>Create the definitive <code>docker-compose.yml</code> that runs the entire UCCD stack with one command. Every team member runs this — it is the foundation everyone builds on. Coordinate with Akash who handles Kafka + Postgres sections.</p>
+          <div class="install-label">Final docker-compose services</div>
+          <div class="install">services:
+  zookeeper    ← Akash handles
+  kafka        ← Akash handles
+  postgres     ← Akash handles
+  redis        ← YOU handle this
+  api          ← you wire this up</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Add Redis service to the shared <code>docker-compose.yml</code>: image <code>redis:7-alpine</code>, port <code>6379:6379</code>, named volume <code>redis_data</code> for persistence.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Add the FastAPI <code>api</code> service: build from <code>./Dockerfile</code>, port <code>8000:8000</code>, <code>depends_on: [postgres, kafka, redis]</code>, env variables for DB URL and Redis URL.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Write the <code>Dockerfile</code> for the FastAPI app: <code>FROM python:3.11-slim</code>, copy requirements.txt, pip install, copy source, <code>CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]</code>.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Write a <code>Makefile</code> with shortcuts: <code>make up</code> (docker compose up), <code>make down</code>, <code>make logs</code>, <code>make seed</code> (run demo data script). Share with team.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Test: run <code>docker compose up</code> from scratch, verify all services are healthy. PostgreSQL health check: <code>pg_isready</code>. Redis health check: <code>redis-cli ping</code>. Document the startup order.</div></div>
+            <div class="note">Add <code>requests</code> to <code>requirements.txt</code>. Akash's <code>services/translation_service.py</code> uses it to call Sarvam API. Without it the Docker build fails.</div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Write <code>src/config.py</code> — loads all environment variables using <code>pydantic BaseSettings</code>: POSTGRES_URL, REDIS_URL, ANTHROPIC_API_KEY, SECRET_KEY, JWT_ALGORITHM, JWT_EXPIRY_MINUTES. Abhineet imports this.</div></div>
+            <div class="step"><div class="step-num">7</div><div class="step-text">Add <code>requests</code> to <code>requirements.txt</code> (used by Sarvam HTTP calls) so every container has it explicitly installed.</div></div>
+          </div>
+          <div class="note">Share working <code>docker-compose.yml</code> with full team by Day 5 of Week 1. If anyone can't run it, fix it immediately — this blocks everyone.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 2 -->
+  <div class="section">
+    <div class="section-title">Week 2 — JWT Authentication</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#F85149;"></div>
+        <div class="week-num">WEEK 02</div>
+        <div class="week-title">Login + JWT + Role-Based Access Control</div>
+        <div class="week-days">Days 8–14</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-auth">AUTH</span>Module 2 — JWT Authentication System</div>
+          <p>Users log in with email + password. Get back a JWT token. Every subsequent API call includes that token in the Authorization header. Role-based access: AGENT can only see their own complaints, SUPERVISOR sees everything, COMPLIANCE sees regulatory complaints.</p>
+          <div class="install-label">Install</div>
+          <div class="install">pip install python-jose[cryptography] passlib[bcrypt] python-multipart</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Create <code>api/models/user.py</code> — SQLAlchemy User model: id, email, hashed_password, role (ENUM: AGENT/SUPERVISOR/COMPLIANCE/ADMIN), name, department, is_active, created_at.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Create users table in DB. Write Alembic migration. Seed 4 test users — one per role — with hashed passwords using <code>passlib.hash.bcrypt.hash("password123")</code>.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Write <code>api/auth.py</code>: <code>create_access_token(data: dict) -> str</code> using python-jose HS256. Token expiry: 60 minutes. Secret key from <code>config.SECRET_KEY</code>.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Write <code>verify_token(token: str) -> dict</code> — decodes JWT, raises HTTPException 401 if invalid or expired.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Write <code>get_current_user(token: str = Depends(oauth2_scheme)) -> User</code> FastAPI dependency. Abhineet adds this to any route that needs auth.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Write <code>require_role(role: str)</code> dependency factory — raises 403 if current user's role doesn't match. Example: <code>@router.get("/regulatory", dependencies=[Depends(require_role("COMPLIANCE"))])</code>.</div></div>
+            <div class="step"><div class="step-num">7</div><div class="step-text">Add auth route to Abhineet's FastAPI: POST <code>/api/v1/auth/login</code> accepts email+password, returns <code>{access_token, token_type, role, user_id, name}</code>.</div></div>
+            <div class="step"><div class="step-num">8</div><div class="step-text">Test: login with test user, copy token, call protected endpoint with <code>Authorization: Bearer {token}</code> header. Verify 401 without token, 403 with wrong role.</div></div>
+          </div>
+          <div class="io-grid">
+            <div class="io-box"><div class="io-label io-in">Input (POST /auth/login)</div><ul><li><code>email</code></li><li><code>password</code></li><li><code>role</code> (which role they're logging in as)</li></ul></div>
+            <div class="io-box"><div class="io-label io-out">Output</div><ul><li><code>access_token</code> — JWT string</li><li><code>token_type: "bearer"</code></li><li><code>role</code></li><li><code>user_id</code></li><li><code>name</code></li></ul></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 3 -->
+  <div class="section">
+    <div class="section-title">Week 3 — Redis SLA Engine</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#D29922;"></div>
+        <div class="week-num">WEEK 03</div>
+        <div class="week-title">SLA Countdown Timers + Breach Detection + Alerts</div>
+        <div class="week-days">Days 15–21</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-redis">REDIS</span>Module 3 — SLA Engine</div>
+          <p>Uses Redis TTL keys as countdown timers for every open complaint. A background job runs every 60 seconds, checks all active SLA timers, and fires alerts when complaints reach 50%, 75%, and 90% of their deadline — before breaching. When TTL expires, marks complaint as BREACHED.</p>
+          <div class="install-label">Install</div>
+          <div class="install">pip install redis apscheduler</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Write <code>services/sla_service.py</code>. Connect to Redis: <code>r = redis.Redis(host="localhost", port=6379, decode_responses=True)</code>.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Write <code>set_sla_timer(complaint_id: str, sla_tier: str)</code> — maps tier to hours (REGULATORY=5, HIGH=24, MEDIUM=48, NORMAL=72), calls <code>r.setex(f"sla:{complaint_id}", hours*3600, sla_tier)</code>. Also stores metadata: <code>r.hset(f"sla_meta:{complaint_id}", mapping={"deadline": iso_string, "tier": sla_tier, "alert_50": "0", "alert_75": "0", "alert_90": "0"})</code>.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Write <code>get_sla_status(complaint_id: str) -> dict</code> — returns time remaining in seconds, percentage elapsed, deadline ISO string. Used by Hemnat's frontend countdown timers.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Write <code>check_all_slas()</code> — background job that runs every 60 seconds. Scans all <code>sla:*</code> keys. For each: compute pct_elapsed from TTL. If ≥ 0.50 and alert_50 not sent → call <code>fire_sla_alert(complaint_id, "50_PERCENT")</code> and set flag. Same for 75% and 90%.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Write <code>fire_sla_alert(complaint_id, alert_type)</code> — calls Abhineet's WebSocket broadcast: <code>manager.broadcast({"type": "sla_alert", "alert_type": alert_type, "complaint_id": complaint_id})</code>. Also calls <code>supervisor_notification_service</code>.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Handle breach: when <code>r.ttl(key)</code> returns -2 (key expired), update complaint status to "breached" in PostgreSQL and broadcast <code>{"type": "breach_occurred", "complaint_id": ...}</code>.</div></div>
+            <div class="step"><div class="step-num">7</div><div class="step-text">Write <code>clear_sla_timer(complaint_id)</code> — called when complaint is resolved. Deletes both the TTL key and meta hash from Redis.</div></div>
+            <div class="step"><div class="step-num">8</div><div class="step-text">Register the background job in Abhineet's FastAPI startup: <code>scheduler.add_job(check_all_slas, "interval", seconds=60)</code>. Start scheduler on app startup event.</div></div>
+          </div>
+          <div class="io-grid">
+            <div class="io-box"><div class="io-label io-in">Input</div><ul><li><code>complaint_id</code></li><li><code>sla_tier</code> from Akash's severity scorer</li></ul></div>
+            <div class="io-box"><div class="io-label io-out">Output</div><ul><li>Redis TTL key tracking deadline</li><li>WebSocket alerts at 50/75/90% elapsed</li><li>DB status update to "breached" on expiry</li></ul></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 4 -->
+  <div class="section">
+    <div class="section-title">Week 4 — Agent Load Tracking + Regulatory Module</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#BC8CFF;"></div>
+        <div class="week-num">WEEK 04</div>
+        <div class="week-title">Cognitive Load State in Redis + Regulatory Deadlines</div>
+        <div class="week-days">Days 22–28</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-redis">REDIS</span>Module 4 — Agent Load Tracking</div>
+          <p>Track each agent's real-time cognitive load score in Redis. This is what powers the Agent Load Bars on the Supervisor dashboard and the routing logic in the Cognitive Load Manager.</p>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Write <code>services/agent_service.py</code>. When a complaint is assigned to agent X, push to <code>r.lpush(f"queue:{agent_id}", complaint_id)</code>.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Write <code>compute_agent_load(agent_id: str) -> float</code>: queue_depth = <code>r.llen(f"queue:{agent_id}")</code>, complexity_avg = <code>float(r.get(f"complexity:{agent_id}") or 0)</code>, shift_hours = hours since login from Redis. Load = (queue*0.35 + complexity*0.30 + shift_fatigue*0.15 + 0.20). Clamp 0–1.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Write <code>get_best_agent(complaint_severity: str, db) -> str</code> — gets all active agents, computes load for each, returns the agent_id with lowest load who has the right skill (severity level). This is called by the orchestrator when assigning a complaint.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Write <code>check_agent_loads()</code> background job — runs every 5 minutes. Any agent with load > 0.80 → broadcast <code>{"type": "agent_overload", "agent_id": ..., "load": ...}</code> to WebSocket.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Add route to Abhineet's API: GET <code>/api/v1/agents/load</code> — calls <code>compute_agent_load</code> for all active agents, returns list for Hemnat's load bars.</div></div>
+          </div>
+        </div>
+
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-redis">MODULE</span>Module 5 — Regulatory Deadline Tracker</div>
+          <p>Regulatory complaints have an independent deadline timer separate from the internal SLA. This runs alongside the SLA engine but uses different hours and cannot be cancelled even if the complaint is "resolved".</p>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Write <code>services/regulatory_service.py</code>. When a complaint with <code>regulatory_flag=True</code> arrives, set: <code>r.setex(f"regulatory:{complaint_id}", 5*3600, "REGULATORY")</code> (5 hours for Banking Ombudsman, 30 days for RBI formal — use 5h for MVP).</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Write <code>check_regulatory_deadlines()</code> — separate background job, runs every 15 minutes. Checks all <code>regulatory:*</code> keys. At 80% elapsed: broadcast urgent alert. At expiry: flag complaint as REGULATORY_BREACH, notify compliance team via WebSocket.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Write <code>get_regulatory_status(complaint_id) -> dict</code> — returns time remaining, percentage, deadline. Hemnat uses this for the countdown timers on the Regulatory Dashboard.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 5 -->
+  <div class="section">
+    <div class="section-title">Week 5 — Testing</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#3FB950;"></div>
+        <div class="week-num">WEEK 05</div>
+        <div class="week-title">Write Tests for Every Critical Path</div>
+        <div class="week-days">Days 29–35</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-test">TESTING</span>Module 6 — pytest Test Suite</div>
+          <p>Write tests so the team can verify nothing is broken before the demo. Focus on the most critical paths: complaint creation → agent pipeline → SLA timer → alert fired.</p>
+          <div class="install-label">Install</div>
+          <div class="install">pip install pytest pytest-asyncio httpx</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Write <code>tests/test_auth.py</code> — test login with valid credentials returns token, invalid password returns 401, token with wrong role returns 403 on protected endpoint.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Write <code>tests/test_complaints.py</code> — test POST /complaints creates row in DB, GET /complaints returns list, GET /complaints/{id} returns full record, PUT /complaints/{id}/status validates transitions. Add Sarvam tests: (1) submit any non-English complaint (Urdu is one example), verify detected <code>source_language</code> matches input language and stored <code>raw_text</code> is English translation; (2) submit English complaint, verify <code>source_language="en-IN"</code> and <code>original_text=raw_text</code>.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Write <code>tests/test_sla.py</code> — test set_sla_timer creates Redis key with correct TTL, get_sla_status returns correct percentage, 90% alert fires when threshold crossed, clear_sla_timer removes key.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Write <code>tests/test_agents.py</code> — test severity scorer returns correct tier for known inputs, emotion arc returns negative slope for worsening messages, breach predictor returns high probability for heavy queue + fraud complaint.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Write <code>tests/test_integration.py</code> — end-to-end test: POST complaint → poll until enriched → verify all agent outputs written → SLA timer set → draft response generated.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Add <code>make test</code> to Makefile: <code>docker compose run --rm api pytest tests/ -v</code>. All tests must pass before demo. Share failing tests with relevant team member immediately.</div></div>
+            <div class="step"><div class="step-num">7</div><div class="step-text">Add Sarvam translation tests to <code>tests/test_complaints.py</code>: Test 1: <code>detect_language("मेरे खाते से पैसे कट गए")</code> → assert returns <code>"hi-IN"</code>. Test 2: <code>translate("मेरे खाते से पैसे कट गए", "hi-IN", "en-IN")</code> → assert returns English string. Test 3: <code>translate("My card was charged twice", "en-IN", "en-IN")</code> → assert returns same string unchanged, verifying English-to-English skips the API call.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 6 -->
+  <div class="section">
+    <div class="section-title">Week 6 — Demo Prep + Final Integration</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#3FB950;"></div>
+        <div class="week-num">WEEK 06</div>
+        <div class="week-title">Demo Script + Data Seed + Final Checks</div>
+        <div class="week-days">Days 36–42</div>
+      </div>
+      <div class="week-body">
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-text">Run <code>make up</code> from a fresh clone. Everything should start without any manual steps. If it doesn't, fix it.</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text">Coordinate with Abhineet on <code>scripts/seed_demo.py</code> — run it, verify 20 complaints appear in the frontend with correct types, severities, and SLA states.</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text">Verify SLA timers are ticking — open supervisor dashboard, confirm at-risk complaints show correct countdown. Manually set a complaint's sla_deadline to 3 minutes from now and watch it breach in real time.</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-text">Run full test suite: <code>make test</code>. All tests pass = system is ready. Fix any failures with relevant team member.</div></div>
+          <div class="step"><div class="step-num">5</div><div class="step-text">Write the README.md for the repo: how to clone, <code>make up</code>, open browser, log in with test credentials, demo flow steps. This is what judges see if they look at your GitHub.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELIVERABLES -->
+  <div class="section">
+    <div class="section-title">Your Deliverables Summary</div>
+    <table class="sum-table">
+      <thead><tr><th>Module</th><th>File</th><th>Output</th></tr></thead>
+      <tbody>
+        <tr><td>Docker Stack</td><td><code>docker-compose.yml</code>, <code>Dockerfile</code>, <code>Makefile</code></td><td>Full stack runs with one command</td></tr>
+        <tr><td>Config</td><td><code>src/config.py</code></td><td>Central env config for whole team</td></tr>
+        <tr><td>Sarvam API Key Config</td><td><code>src/config.py</code>, <code>.env.example</code></td><td><code>SARVAM_API_KEY</code> available to whole team</td></tr>
+        <tr><td>JWT Auth</td><td><code>api/auth.py</code>, <code>api/models/user.py</code></td><td>Login + token + role-based access</td></tr>
+        <tr><td>SLA Engine</td><td><code>services/sla_service.py</code></td><td>Redis timers + 50/75/90% alerts + breach</td></tr>
+        <tr><td>Agent Load</td><td><code>services/agent_service.py</code></td><td>Real-time load scores + routing + burnout alerts</td></tr>
+        <tr><td>Regulatory</td><td><code>services/regulatory_service.py</code></td><td>Independent regulatory deadline tracking</td></tr>
+        <tr><td>Tests</td><td><code>tests/</code></td><td>Full test suite, all passing before demo</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Git Workflow</div>
+    <div class="install-label">Branch name</div>
+    <div class="install" style="color:var(--amber)">git checkout -b feature/pritesh-auth-sla-devops</div>
+    <div style="margin-top:12px;">
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text">Your files: <code>docker-compose.yml</code>, <code>Dockerfile</code>, <code>Makefile</code>, <code>src/config.py</code>, <code>api/auth.py</code>, <code>api/models/user.py</code>, <code>services/sla_service.py</code>, <code>services/agent_service.py</code>, <code>services/regulatory_service.py</code>, <code>tests/</code>, <code>README.md</code>.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text">Coordinate with Akash on <code>docker-compose.yml</code> — he handles Kafka/Postgres sections, you handle Redis/API sections. Merge carefully.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text">Push <code>docker-compose.yml</code> and <code>Makefile</code> by Day 5 of Week 1 — same deadline as Akash's DB setup.</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

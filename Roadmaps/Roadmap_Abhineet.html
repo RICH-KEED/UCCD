@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Abhineet — UCCD Roadmap</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#0D1117;--surface:#161B22;--border:#21262D;--accent:#58A6FF;--green:#3FB950;--amber:#D29922;--red:#F85149;--purple:#BC8CFF;--teal:#39D353;--text:#C9D1D9;--muted:#8B949E;--white:#F0F6FC;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;}
+.page{max-width:900px;margin:0 auto;padding:40px 32px;}
+.header{border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:32px;}
+.role-badge{display:inline-block;background:rgba(188,140,255,.12);border:1px solid rgba(188,140,255,.3);color:var(--purple);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;font-family:'IBM Plex Mono';margin-bottom:12px;}
+.name{font-size:32px;font-weight:700;color:var(--white);margin-bottom:4px;}
+.project{font-size:14px;color:var(--muted);}
+.meta-row{display:flex;gap:24px;margin-top:16px;flex-wrap:wrap;}
+.meta-item{font-size:12px;color:var(--muted);}.meta-item span{color:var(--text);font-weight:600;}
+.section{margin-bottom:40px;}
+.section-title{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.week{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;}
+.week-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);}
+.week-num{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:var(--muted);}
+.week-title{font-size:15px;font-weight:600;color:var(--white);}
+.week-days{margin-left:auto;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono';}
+.week-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.week-body{padding:16px;}
+.module{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.module:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.module-name{font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.module-badge{font-size:10px;font-weight:600;padding:1px 7px;border-radius:3px;font-family:'IBM Plex Mono';}
+.mb-ai{background:rgba(188,140,255,.15);color:var(--purple);}
+.mb-api{background:rgba(88,166,255,.15);color:var(--accent);}
+.mb-db{background:rgba(63,185,80,.15);color:var(--green);}
+.io-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.io-box{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;}
+.io-label{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px;}
+.io-in{color:var(--amber);}.io-out{color:var(--green);}
+.io-box ul{padding-left:14px;}
+.io-box li{font-size:12px;color:var(--muted);margin-bottom:3px;}
+.io-box li code{color:var(--text);font-family:'IBM Plex Mono';font-size:11px;}
+.steps{margin-top:10px;}
+.step{display:flex;gap:10px;margin-bottom:6px;align-items:flex-start;}
+.step-num{min-width:20px;height:20px;background:var(--border);border-radius:50%;font-size:10px;font-weight:700;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-family:'IBM Plex Mono';}
+.step-text{font-size:12.5px;color:var(--muted);line-height:1.5;}
+.step-text code{color:var(--accent);font-family:'IBM Plex Mono';font-size:11px;background:rgba(88,166,255,.08);padding:1px 5px;border-radius:3px;}
+.step-text strong{color:var(--text);}
+.install{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-top:8px;font-family:'IBM Plex Mono';font-size:12px;color:var(--green);}
+.install-label{font-size:10px;color:var(--muted);margin-bottom:6px;font-family:'IBM Plex Sans';}
+.note{background:rgba(210,153,34,.06);border:1px solid rgba(210,153,34,.2);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--amber);margin-top:10px;}
+.sum-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.sum-table th{background:var(--surface);color:var(--muted);padding:8px 12px;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.sum-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);}
+.sum-table tr:last-child td{border-bottom:none;}
+.sum-table td code{font-family:'IBM Plex Mono';font-size:11px;color:var(--accent);}
+.endpoint-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);}
+.endpoint-row:last-child{border-bottom:none;}
+.method{font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;font-family:'IBM Plex Mono';flex-shrink:0;margin-top:2px;}
+.get{background:rgba(63,185,80,.15);color:var(--green);}
+.post{background:rgba(88,166,255,.15);color:var(--accent);}
+.put{background:rgba(210,153,34,.15);color:var(--amber);}
+.ws{background:rgba(188,140,255,.15);color:var(--purple);}
+.ep-path{font-family:'IBM Plex Mono';font-size:12px;color:var(--white);margin-bottom:3px;}
+.ep-desc{font-size:12px;color:var(--muted);}
+
+/* top nav */
+.top-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.top-link{font-family:'IBM Plex Mono';font-size:11px;text-decoration:none;color:var(--muted);padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .2s ease;}
+.top-link:hover{color:var(--white);border-color:rgba(88,166,255,.45);}
+.top-link.master{color:var(--accent);border-color:rgba(88,166,255,.35);}
+.top-link.active{color:var(--white);border-color:rgba(188,140,255,.75);background:rgba(188,140,255,.16);box-shadow:0 0 0 1px rgba(188,140,255,.35) inset;font-weight:700;}
+.top-link.active::before{content:'• ';}
+
+p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="top-nav" aria-label="Roadmap Pages">
+    <a class="top-link master" href="Roadmap_Master.html">Master Roadmap</a>
+    <a class="top-link" href="Roadmap_Akash.html">Akash</a>
+    <a class="top-link active" aria-current="page" href="Roadmap_Abhineet.html">Abhineet</a>
+    <a class="top-link" href="Roadmap_Hemnat.html">Hemnat</a>
+    <a class="top-link" href="Roadmap_Pritesh.html">Pritesh</a>
+  </nav>
+
+  <div class="header">
+    <div class="role-badge">AI Engineer + Backend (FastAPI)</div>
+    <div class="name">Abhineet</div>
+    <div class="project">UCCD — Unified Customer Complaint Communication Dashboard</div>
+    <div class="meta-row">
+      <div class="meta-item">Timeline: <span>6 Weeks</span></div>
+      <div class="meta-item">Modules: <span>6</span></div>
+      <div class="meta-item">Stack: <span>Python · FastAPI · Claude API · LangGraph · PostgreSQL · SQLAlchemy · WebSocket</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Your Responsibility</div>
+    <p>You own the FastAPI application — every API endpoint, the database models (ORM layer on top of Akash's schema), the Claude API integration for classification and draft generation, and the LangGraph orchestrator that runs all 6 agents in parallel. Hemnat's frontend calls your APIs. Pritesh's SLA engine and auth middleware plug into your FastAPI app.</p>
+    <p><strong style="color:var(--white)">Week 1 is shared with Akash.</strong> While Akash sets up Kafka + raw DB schema, you set up the FastAPI app + SQLAlchemy models. By end of Week 1 the team has working mock endpoints to build against.</p>
+  </div>
+
+  <!-- WEEK 1 -->
+  <div class="section">
+    <div class="section-title">Week 1 — FastAPI App + Database Models (CRITICAL)</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#BC8CFF;"></div>
+        <div class="week-num">WEEK 01</div>
+        <div class="week-title">FastAPI Setup + ORM Models + Mock Endpoints</div>
+        <div class="week-days">Days 1–7</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-api">FASTAPI</span>Module 1 — Project Structure + ORM Models</div>
+          <p>Set up the FastAPI project. Create SQLAlchemy ORM models that map to Akash's PostgreSQL schema. Create the core complaint endpoints that Hemnat needs to start building the frontend.</p>
+          <div class="install-label">Install</div>
+          <div class="install">pip install fastapi uvicorn sqlalchemy alembic pydantic python-jose passlib python-multipart</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Create project structure: <code>api/main.py</code>, <code>api/models/</code>, <code>api/routes/</code>, <code>api/schemas/</code>, <code>api/services/</code>.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Write <code>api/models/complaint.py</code> — SQLAlchemy model matching Akash's complaints table exactly. Include all columns: id, customer_id, channel, raw_text, complaint_type, severity_score, sla_tier, status, emotion_arc, embedding, cluster_id, breach_probability, created_at.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Write Pydantic schemas in <code>api/schemas/complaint.py</code>: <code>ComplaintCreate</code> (POST body), <code>ComplaintResponse</code> (GET response), <code>ComplaintListResponse</code> (paginated list).</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Write <code>api/routes/complaints.py</code> with these endpoints: POST <code>/api/v1/complaints</code>, GET <code>/api/v1/complaints</code> (with filters: status, tier, channel, page, limit), GET <code>/api/v1/complaints/{id}</code>.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">For Week 1, these endpoints return mock data — hardcoded fake complaints. AI enrichment comes in Week 3. Hemnat can start building frontend NOW against these mock responses.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Start FastAPI with: <code>uvicorn api.main:app --reload --port 8000</code>. Share the Swagger URL (<code>http://localhost:8000/docs</code>) with the team by Day 5.</div></div>
+          </div>
+          <div class="io-grid">
+            <div class="io-box"><div class="io-label io-in">Input (POST /complaints)</div><ul><li><code>customer_id</code></li><li><code>channel</code></li><li><code>raw_text</code></li><li><code>regulatory_flag</code> (optional)</li></ul></div>
+            <div class="io-box"><div class="io-label io-out">Output</div><ul><li><code>complaint_id</code> (UUID)</li><li><code>status: "queued"</code></li><li><code>sla_deadline</code> (mock: +48h)</li><li>HTTP 201 Created</li></ul></div>
+          </div>
+          <div class="note">Share Swagger docs link with Hemnat by Day 5 of Week 1. He needs exact request/response shapes to build the frontend against.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 2 -->
+  <div class="section">
+    <div class="section-title">Week 2 — Claude API: NLP Classifier</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#58A6FF;"></div>
+        <div class="week-num">WEEK 02</div>
+        <div class="week-title">Claude-Powered NLP Classification Agent</div>
+        <div class="week-days">Days 8–14</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-ai">AI</span>Module 2 — NLP Classifier Agent</div>
+          <p>Use Claude API to classify every complaint across 4 dimensions simultaneously: type, product, intent, and regulatory obligation. Structured JSON output only. This runs as a Kafka consumer — reads complaint, classifies, writes back to DB.</p>
+          <div class="install-label">Install</div>
+          <div class="install">pip install anthropic</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Get API key from <code>console.anthropic.com</code>. Store in <code>.env</code> as <code>ANTHROPIC_API_KEY</code>. Never commit the key.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Write <code>agents/nlp_classifier.py</code> — <code>classify_complaint(text: str, bot_slots: dict) -> dict</code>.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">System prompt: <code>"You are a PSB complaint classifier. Return ONLY valid JSON. No explanation, no markdown."</code></div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">User prompt asks Claude to return: <code>type</code> (fraud/billing/kyc/loans/cards/service/other), <code>type_confidence</code> (0–1), <code>product</code> (savings/current/credit_card/home_loan/personal_loan/fd/insurance), <code>intent</code> (refund/explanation/escalation/closure/legal_threat), <code>regulatory_obligation</code> (banking_ombudsman/rbi_consumer/none).</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Use <code>model="claude-sonnet-4-6"</code>, <code>max_tokens=300</code>. Parse response with <code>json.loads()</code>. If parsing fails, return default classification with type="other" and confidence=0.5.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Write <code>NLPConsumer(BaseConsumer)</code> extending Akash's base class. Consume from <code>complaints.inbound</code>, classify, write <code>complaint_type</code>, <code>product_code</code>, <code>intent</code>, <code>regulatory_flag</code> to DB row.</div></div>
+            <div class="step"><div class="step-num">7</div><div class="step-text">Test with 20 different complaint texts. Check Claude always returns valid JSON. Add retry logic with exponential backoff for API rate limits.</div></div>
+          </div>
+          <div class="io-grid">
+            <div class="io-box"><div class="io-label io-in">Input</div><ul><li><code>raw_text</code> — complaint string</li><li><code>bot_slots</code> — dict (optional pre-fills)</li></ul></div>
+            <div class="io-box"><div class="io-label io-out">Output</div><ul><li><code>complaint_type</code></li><li><code>type_confidence</code></li><li><code>product_code</code></li><li><code>intent</code></li><li><code>regulatory_obligation</code></li></ul></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 3 -->
+  <div class="section">
+    <div class="section-title">Week 3 — LangGraph Orchestrator</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#BC8CFF;"></div>
+        <div class="week-num">WEEK 03</div>
+        <div class="week-title">Multi-Agent Pipeline (All 6 Agents in Parallel)</div>
+        <div class="week-days">Days 15–21</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-ai">AI</span>Module 3 — LangGraph Agent Orchestrator</div>
+          <p>Wire all 6 agents (NLP Classifier + Akash's 4 ML agents + Root Cause) into a LangGraph graph that runs them in parallel. This is the core pipeline — one complaint in, fully enriched complaint out in under 800ms.</p>
+          <div class="install-label">Install</div>
+          <div class="install">pip install langgraph langchain-anthropic</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Define <code>ComplaintState</code> TypedDict in <code>agents/state.py</code> — all fields the agents read and write: complaint_id, text, channel, classification, emotion_arc, embedding, cluster_id, severity_score, sla_tier, breach_probability, pre_escalate.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Write wrapper functions for each agent that takes state and returns updated state: <code>run_nlp(state)</code>, <code>run_emotion(state)</code>, <code>run_dna(state)</code>, <code>run_severity(state)</code>, <code>run_escalation(state)</code>.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Build the LangGraph: add each agent as a node, add parallel edges from START to all 5 agents simultaneously. Add a final <code>orchestrator</code> node that waits for all 5 and commits the merged state to PostgreSQL.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Write <code>agents/root_cause_agent.py</code> — simple version: query DB for complaints in same cluster. If count ≥ 10 and no root_cause_id yet, create a root cause record and link all cluster members. Uses psycopg2 directly (no Neo4j needed for MVP).</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Compile the graph: <code>pipeline = graph.compile()</code>. Expose <code>run_pipeline(complaint_id: str, text: str, ...) -> ComplaintState</code> function.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Integrate with FastAPI: when POST <code>/api/v1/complaints</code> is called, publish to Kafka AND call <code>run_pipeline()</code> async. Return immediately with complaint_id — enrichment happens in background.</div></div>
+            <div class="step"><div class="step-num">7</div><div class="step-text">Time the full pipeline end-to-end. Should be under 2 seconds for MVP (800ms target is for production scale). Log timing for each agent node.</div></div>
+          </div>
+          <div class="io-grid">
+            <div class="io-box"><div class="io-label io-in">Input</div><ul><li>Raw complaint from Kafka</li><li>complaint_id, text, channel, customer_id</li></ul></div>
+            <div class="io-box"><div class="io-label io-out">Output</div><ul><li>Fully enriched complaint row in DB</li><li>All agent outputs written atomically</li></ul></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 4 -->
+  <div class="section">
+    <div class="section-title">Week 4 — Draft Response Generator + WebSocket</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#3FB950;"></div>
+        <div class="week-num">WEEK 04</div>
+        <div class="week-title">AI Draft Response + Real-Time WebSocket Server</div>
+        <div class="week-days">Days 22–28</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-ai">AI</span>Module 4 — Draft Response Generator</div>
+          <p>Generate a tone-matched draft response for every complaint using Claude. Tone is determined by the emotion arc slope from Akash's agent. Agent edits are tracked for future model improvement.</p>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Write <code>services/draft_service.py</code> — <code>generate_draft(complaint_text, emotion_arc, complaint_type, regulatory_flag) -> str</code>.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Determine tone: if <code>emotion_arc["arc_slope"] &lt; 0</code> → "empathetic", elif <code>regulatory_flag</code> → "regulatory_formal", else → "professional".</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">System prompt: <code>f"You are a {tone} PSB complaint officer. Write a response under 120 words. Be specific and action-oriented."</code></div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Add endpoint: GET <code>/api/v1/ai/draft/{complaint_id}</code> — fetches complaint from DB, generates draft, returns it. Also stores draft in <code>ai_draft_response</code> column.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Add endpoint: POST <code>/api/v1/complaints/{id}/respond</code> — agent sends final response. Store in <code>final_response</code>, compute edit_delta (character diff vs draft), set status to "resolved".</div></div>
+          </div>
+        </div>
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-api">FASTAPI</span>Module 5 — WebSocket Server</div>
+          <p>Real-time push notifications to the supervisor dashboard. When a breach happens or is predicted, the supervisor sees it instantly without refreshing.</p>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Write <code>api/websocket.py</code> — <code>ConnectionManager</code> class with <code>connect(ws)</code>, <code>disconnect(ws)</code>, <code>broadcast(message)</code> methods. Store active connections in a set.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Add WS endpoint: <code>ws://localhost:8000/api/v1/ws/supervisor</code>. When a client connects, add to manager. When they disconnect, remove.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">From the Kafka consumer or SLA check — call <code>manager.broadcast({"type": "breach_predicted", "complaint_id": ..., "probability": ...})</code>. Supervisor dashboard receives this instantly.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Message types to support: <code>new_complaint</code>, <code>breach_predicted</code>, <code>breach_occurred</code>, <code>cluster_spike</code>, <code>agent_overload</code>.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Test using browser DevTools console: <code>const ws = new WebSocket('ws://localhost:8000/api/v1/ws/supervisor')</code>. Trigger a breach — verify message arrives instantly.</div></div>
+          </div>
+          <div class="io-grid">
+            <div class="io-box"><div class="io-label io-in">Input (WebSocket)</div><ul><li>Events from SLA engine or Kafka consumers</li></ul></div>
+            <div class="io-box"><div class="io-label io-out">Output</div><ul><li>Real-time JSON push to all connected supervisor clients</li></ul></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 5 -->
+  <div class="section">
+    <div class="section-title">Week 5 — Remaining API Endpoints</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#D29922;"></div>
+        <div class="week-num">WEEK 05</div>
+        <div class="week-title">All Remaining Routes Hemnat Needs</div>
+        <div class="week-days">Days 29–35</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-api">FASTAPI</span>Module 6 — Complete API Surface</div>
+          <p>Build all remaining endpoints. Hemnat's frontend is already partially built — he needs these routes to complete every screen.</p>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">PUT <code>/api/v1/complaints/{id}/status</code> — update status. Validate transitions: only new→in_progress, in_progress→resolved, any→escalated are valid.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">GET <code>/api/v1/escalations</code> — return all complaints where status=escalated OR (breach_probability &gt; 0.70 AND status!=resolved). Sorted by urgency. This powers the supervisor escalation queue.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">GET <code>/api/v1/agents/load</code> — return list of agents with their current load score (from Redis via Pritesh's service). If Redis not ready, return mock data.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">GET <code>/api/v1/analytics/trends</code> — query DB for complaint counts grouped by type and day for the past 7/30 days. Return JSON for charts.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">POST <code>/api/v1/simulation/run</code> — body: {condition, resolution_action}. Query DB with the condition, count matching open complaints, calculate estimates. Return impact object.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">GET <code>/api/v1/complaints/{id}/history</code> — return all communication turns for a complaint sorted by timestamp. Hemnat needs this for the conversation history panel.</div></div>
+            <div class="step"><div class="step-num">7</div><div class="step-text">Add CORS middleware to FastAPI: <code>allow_origins=["http://localhost:3000"]</code> so Hemnat's React app can call your API.</div></div>
+            <div class="step"><div class="step-num">8</div><div class="step-text">Add GET <code>/api/v1/ai/translate-preview?text=...&target_lang=...</code> endpoint. Calls <code>translation_service.translate(text, "en-IN", target_lang)</code> imported from Akash's file. Returns translated string. Hemnat calls this on 1-second debounce as agent types. Skip if <code>target_lang</code> is <code>en-IN</code>.</div></div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:16px;">All Your API Endpoints Summary</div>
+        <div class="endpoint-row"><span class="method post">POST</span><div><div class="ep-path">/api/v1/complaints</div><div class="ep-desc">Create complaint — triggers LangGraph pipeline</div></div></div>
+        <div class="endpoint-row"><span class="method get">GET</span><div><div class="ep-path">/api/v1/complaints?status=open&tier=HIGH&page=1&limit=20</div><div class="ep-desc">List complaints with filters + pagination</div></div></div>
+        <div class="endpoint-row"><span class="method get">GET</span><div><div class="ep-path">/api/v1/complaints/{id}</div><div class="ep-desc">Full 360° complaint record</div></div></div>
+        <div class="endpoint-row"><span class="method get">GET</span><div><div class="ep-path">/api/v1/complaints/{id}/history</div><div class="ep-desc">Communication turn history</div></div></div>
+        <div class="endpoint-row"><span class="method put">PUT</span><div><div class="ep-path">/api/v1/complaints/{id}/status</div><div class="ep-desc">Update status with transition validation</div></div></div>
+        <div class="endpoint-row"><span class="method post">POST</span><div><div class="ep-path">/api/v1/complaints/{id}/respond</div><div class="ep-desc">Agent sends final response</div></div></div>
+        <div class="endpoint-row"><span class="method get">GET</span><div><div class="ep-path">/api/v1/ai/draft/{id}</div><div class="ep-desc">Generate or fetch AI draft response</div></div></div>
+        <div class="endpoint-row"><span class="method get">GET</span><div><div class="ep-path">/api/v1/ai/translate-preview?text=...&target_lang=...</div><div class="ep-desc">Translate draft preview to target language before send</div></div></div>
+        <div class="endpoint-row"><span class="method get">GET</span><div><div class="ep-path">/api/v1/escalations</div><div class="ep-desc">Supervisor escalation queue</div></div></div>
+        <div class="endpoint-row"><span class="method get">GET</span><div><div class="ep-path">/api/v1/agents/load</div><div class="ep-desc">Real-time agent load scores</div></div></div>
+        <div class="endpoint-row"><span class="method get">GET</span><div><div class="ep-path">/api/v1/analytics/trends?window=7d</div><div class="ep-desc">Complaint volume trend data for charts</div></div></div>
+        <div class="endpoint-row"><span class="method post">POST</span><div><div class="ep-path">/api/v1/simulation/run</div><div class="ep-desc">What-If policy simulation</div></div></div>
+        <div class="endpoint-row"><span class="method get">GET</span><div><div class="ep-path">/api/v1/kpis</div><div class="ep-desc">Supervisor dashboard KPIs: open count, breached, predicted, FCR rate, avg handle time</div></div></div>
+        <div class="endpoint-row"><span class="method ws">WS</span><div><div class="ep-path">ws://localhost:8000/api/v1/ws/supervisor</div><div class="ep-desc">Real-time supervisor feed</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 6 -->
+  <div class="section">
+    <div class="section-title">Week 6 — Integration + Error Handling</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#3FB950;"></div>
+        <div class="week-num">WEEK 06</div>
+        <div class="week-title">End-to-End Test + Demo Data + Error Handling</div>
+        <div class="week-days">Days 36–42</div>
+      </div>
+      <div class="week-body">
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-text">Run full end-to-end: POST a complaint → Kafka → LangGraph pipeline → all agents write to DB → GET complaint shows fully enriched record → draft response generated. Time the full flow.</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text">Add proper error handling: 404 for missing complaints, 422 for validation errors, 500 with useful message for DB errors. Use FastAPI HTTPException.</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text">Add request logging middleware — log every request with method, path, status code, and response time. Essential for demo debugging.</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-text">Seed demo data: write a script <code>scripts/seed_demo.py</code> that inserts 20 realistic complaints across different types, severities, and statuses. Run this before every demo.</div></div>
+          <div class="step"><div class="step-num">5</div><div class="step-text">Share final API documentation URL with Hemnat and Pritesh. Fix any endpoint issues they report.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELIVERABLES -->
+  <div class="section">
+    <div class="section-title">Your Deliverables Summary</div>
+    <table class="sum-table">
+      <thead><tr><th>Module</th><th>File</th><th>Output</th></tr></thead>
+      <tbody>
+        <tr><td>FastAPI App + ORM</td><td><code>api/main.py</code>, <code>api/models/</code></td><td>Running API with mock endpoints for team</td></tr>
+        <tr><td>NLP Classifier</td><td><code>agents/nlp_classifier.py</code></td><td>4-dimension classification via Claude</td></tr>
+        <tr><td>LangGraph Pipeline</td><td><code>agents/orchestrator.py</code></td><td>All 6 agents run in parallel</td></tr>
+        <tr><td>Draft Response</td><td><code>services/draft_service.py</code></td><td>Tone-matched draft per complaint + Sarvam outbound translation preview support</td></tr>
+        <tr><td>WebSocket Server</td><td><code>api/websocket.py</code></td><td>Real-time push to supervisor dashboard</td></tr>
+        <tr><td>All API Routes</td><td><code>api/routes/</code></td><td>14 REST endpoints + 1 WebSocket</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Git Workflow</div>
+    <div class="install-label">Branch name</div>
+    <div class="install" style="color:var(--purple)">git checkout -b feature/abhineet-api-ai</div>
+    <div style="margin-top:12px;">
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text">Your folders: <code>api/</code>, <code>agents/nlp_classifier.py</code>, <code>agents/orchestrator.py</code>, <code>agents/root_cause_agent.py</code>, <code>services/draft_service.py</code>, <code>scripts/</code>.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text">Never touch <code>kafka/</code>, <code>db/schema.sql</code>, <code>agents/dna_agent.py</code>, <code>agents/emotion_agent.py</code>, <code>agents/severity_agent.py</code>, <code>agents/escalation_agent.py</code>, <code>services/translation_service.py</code> — those are Akash's. Never edit <code>services/translation_service.py</code> — owned by Akash. Only import from it: <code>from services.translation_service import translate</code>.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text">Share Swagger docs with team by Day 5 of Week 1. Push mock endpoints first, real logic after.</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
