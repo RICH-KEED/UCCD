@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Akash — UCCD Roadmap</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0D1117;--surface:#161B22;--border:#21262D;
+  --accent:#58A6FF;--green:#3FB950;--amber:#D29922;
+  --red:#F85149;--purple:#BC8CFF;--teal:#39D353;
+  --text:#C9D1D9;--muted:#8B949E;--white:#F0F6FC;
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;}
+.page{max-width:900px;margin:0 auto;padding:40px 32px;}
+
+/* header */
+.header{border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:32px;}
+.role-badge{display:inline-block;background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.3);color:var(--accent);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;font-family:'IBM Plex Mono';margin-bottom:12px;}
+.name{font-size:32px;font-weight:700;color:var(--white);margin-bottom:4px;}
+.project{font-size:14px;color:var(--muted);}
+.meta-row{display:flex;gap:24px;margin-top:16px;}
+.meta-item{font-size:12px;color:var(--muted);}.meta-item span{color:var(--text);font-weight:600;}
+
+/* section */
+.section{margin-bottom:40px;}
+.section-title{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* week block */
+.week{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;}
+.week-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);}
+.week-num{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:var(--muted);}
+.week-title{font-size:15px;font-weight:600;color:var(--white);}
+.week-days{margin-left:auto;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono';}
+.week-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+.week-body{padding:16px;}
+
+/* module */
+.module{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.module:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.module-name{font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.module-badge{font-size:10px;font-weight:600;padding:1px 7px;border-radius:3px;font-family:'IBM Plex Mono';}
+.mb-ml{background:rgba(188,140,255,.15);color:var(--purple);}
+.mb-api{background:rgba(88,166,255,.15);color:var(--accent);}
+.mb-db{background:rgba(63,185,80,.15);color:var(--green);}
+.mb-kafka{background:rgba(210,153,34,.15);color:var(--amber);}
+
+.io-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.io-box{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;}
+.io-label{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px;}
+.io-in{color:var(--amber);}
+.io-out{color:var(--green);}
+.io-box ul{padding-left:14px;}
+.io-box li{font-size:12px;color:var(--muted);margin-bottom:3px;}
+.io-box li code{color:var(--text);font-family:'IBM Plex Mono';font-size:11px;}
+
+.steps{margin-top:10px;}
+.step{display:flex;gap:10px;margin-bottom:6px;align-items:flex-start;}
+.step-num{min-width:20px;height:20px;background:var(--border);border-radius:50%;font-size:10px;font-weight:700;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-family:'IBM Plex Mono';}
+.step-text{font-size:12.5px;color:var(--muted);line-height:1.5;}
+.step-text code{color:var(--accent);font-family:'IBM Plex Mono';font-size:11px;background:rgba(88,166,255,.08);padding:1px 5px;border-radius:3px;}
+.step-text strong{color:var(--text);}
+
+/* install block */
+.install{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-top:8px;font-family:'IBM Plex Mono';font-size:12px;color:var(--green);}
+.install-label{font-size:10px;color:var(--muted);margin-bottom:6px;font-family:'IBM Plex Sans';}
+
+/* depends */
+.depends{display:flex;align-items:center;gap:6px;margin-top:10px;padding:8px 12px;background:rgba(248,81,73,.06);border:1px solid rgba(248,81,73,.2);border-radius:6px;font-size:12px;color:var(--red);}
+.depends-icon{font-size:14px;}
+
+/* note */
+.note{background:rgba(210,153,34,.06);border:1px solid rgba(210,153,34,.2);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--amber);margin-top:10px;}
+
+/* checklist */
+.checklist{margin-top:16px;}
+.check-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);}
+.check-item:last-child{border-bottom:none;}
+.check-box{width:16px;height:16px;border:1.5px solid var(--border);border-radius:3px;flex-shrink:0;margin-top:1px;}
+.check-text{font-size:12.5px;color:var(--muted);}
+.check-text strong{color:var(--text);}
+
+/* summary table */
+.sum-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.sum-table th{background:var(--surface);color:var(--muted);padding:8px 12px;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.sum-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);}
+.sum-table tr:last-child td{border-bottom:none;}
+.sum-table td code{font-family:'IBM Plex Mono';font-size:11px;color:var(--accent);}
+
+/* top nav */
+.top-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.top-link{font-family:'IBM Plex Mono';font-size:11px;text-decoration:none;color:var(--muted);padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .2s ease;}
+.top-link:hover{color:var(--white);border-color:rgba(88,166,255,.45);}
+.top-link.master{color:var(--accent);border-color:rgba(88,166,255,.35);}
+.top-link.active{color:var(--white);border-color:rgba(88,166,255,.75);background:rgba(88,166,255,.16);box-shadow:0 0 0 1px rgba(88,166,255,.35) inset;font-weight:700;}
+.top-link.active::before{content:'• ';}
+
+p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="top-nav" aria-label="Roadmap Pages">
+    <a class="top-link master" href="Roadmap_Master.html">Master Roadmap</a>
+    <a class="top-link active" aria-current="page" href="Roadmap_Akash.html">Akash</a>
+    <a class="top-link" href="Roadmap_Abhineet.html">Abhineet</a>
+    <a class="top-link" href="Roadmap_Hemnat.html">Hemnat</a>
+    <a class="top-link" href="Roadmap_Pritesh.html">Pritesh</a>
+  </nav>
+
+  <div class="header">
+    <div class="role-badge">ML Engineer + Backend (Infra)</div>
+    <div class="name">Akash</div>
+    <div class="project">UCCD — Unified Customer Complaint Communication Dashboard</div>
+    <div class="meta-row">
+      <div class="meta-item">Timeline: <span>6 Weeks</span></div>
+      <div class="meta-item">Modules: <span>6</span></div>
+      <div class="meta-item">Stack: <span>Python · Kafka · pgvector · scikit-learn · HuggingFace · PostgreSQL</span></div>
+    </div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="section">
+    <div class="section-title">Your Responsibility</div>
+    <p>You own two areas. First, all ML models — sentence embeddings, severity scoring, emotion arc, and breach prediction. Second, the infrastructure backbone — Kafka event bus setup, PostgreSQL + pgvector configuration, and the consumer skeleton that connects the message queue to the ML pipeline. Abhineet will build the FastAPI app and Claude agents on top of your infrastructure.</p>
+    <p><strong style="color:var(--white)">Critical:</strong> Your Week 1 Kafka + database setup directly unblocks Abhineet, Hemnat, and Pritesh. This is the most important week in the project.</p>
+  </div>
+
+  <!-- WEEK 1 -->
+  <div class="section">
+    <div class="section-title">Week 1 — Infrastructure Foundation (CRITICAL)</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#58A6FF;"></div>
+        <div class="week-num">WEEK 01</div>
+        <div class="week-title">Kafka + PostgreSQL + pgvector Setup</div>
+        <div class="week-days">Days 1–7</div>
+      </div>
+      <div class="week-body">
+
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-kafka">KAFKA</span>Module 1 — Kafka Event Bus</div>
+          <p>Set up Kafka locally using Docker Compose. Create the two topics the system needs. Write the producer function and a base consumer class that Abhineet's agents will extend.</p>
+          <div class="install-label">Install</div>
+          <div class="install">pip install confluent-kafka</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Create <code>docker-compose.yml</code> with Zookeeper + Kafka services. Expose port <code>9092</code>.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Create topic <code>complaints.inbound</code> — 12 partitions, replication factor 1 (local dev). This is where all 6 channel connectors publish complaints.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Create topic <code>complaints.dlq</code> — dead letter queue for malformed messages. 3 partitions.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Write <code>kafka/producer.py</code> — a <code>publish_complaint(envelope: dict)</code> function that serialises to JSON and publishes to <code>complaints.inbound</code> partitioned by <code>customer_id</code>.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Write <code>kafka/base_consumer.py</code> — a <code>BaseConsumer</code> class with <code>start()</code>, <code>process(message)</code> abstract method, and error handling that sends bad messages to DLQ.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Write a test: publish 5 fake complaints, consume them, print each. Share working <code>docker-compose.yml</code> with team.</div></div>
+            <div class="step"><div class="step-num">7</div><div class="step-text">Create a third topic: <code>complaints.translated</code> — 12 partitions, replication factor 1. TranslationConsumer publishes here after translating. All other consumers (DNA, Severity, Emotion, Escalation) subscribe to <code>complaints.translated</code> — NOT <code>complaints.inbound</code>. Only TranslationConsumer subscribes to <code>complaints.inbound</code>.</div></div>
+          </div>
+          <div class="io-grid">
+            <div class="io-box"><div class="io-label io-in">Input</div><ul><li>Complaint dict from any channel connector</li></ul></div>
+            <div class="io-box"><div class="io-label io-out">Output</div><ul><li>Message on <code>complaints.inbound</code> topic</li><li>Working <code>BaseConsumer</code> class for team</li></ul></div>
+          </div>
+        </div>
+
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-db">DATABASE</span>Module 2 — PostgreSQL + pgvector</div>
+          <p>Set up PostgreSQL with the pgvector extension. Create the complaints table schema. Abhineet will add the FastAPI models on top of this.</p>
+          <div class="install-label">Install</div>
+          <div class="install">pip install psycopg2-binary sqlalchemy alembic pgvector</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Add PostgreSQL service to <code>docker-compose.yml</code>. Database name: <code>uccd</code>, user: <code>uccd</code>, password: <code>uccd123</code>.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Run SQL: <code>CREATE EXTENSION IF NOT EXISTS vector;</code> — enables pgvector on the database.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Write <code>db/schema.sql</code> — full complaints table with all columns: id (UUID), customer_id, channel, raw_text, complaint_type, severity_score, sla_tier, status, emotion_arc (JSONB), embedding (vector(384)), cluster_id, breach_probability, created_at, updated_at.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Create vector index: <code>CREATE INDEX ON complaints USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);</code></div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Write <code>db/connection.py</code> — SQLAlchemy engine + session factory. Export <code>get_db()</code> for Abhineet to use in FastAPI routes.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Run Alembic init, create first migration from the schema. Test: insert one complaint row, query it back.</div></div>
+          </div>
+          <div class="io-grid">
+            <div class="io-box"><div class="io-label io-in">Input</div><ul><li>Raw SQL schema definition</li></ul></div>
+            <div class="io-box"><div class="io-label io-out">Output</div><ul><li>Running Postgres with pgvector</li><li><code>get_db()</code> session factory</li><li>Alembic migration file</li></ul></div>
+          </div>
+          <div class="note">Share <code>docker-compose.yml</code> and <code>db/connection.py</code> with whole team at end of Week 1. Everyone else is blocked until this is done.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 2 -->
+  <div class="section">
+    <div class="section-title">Week 2 — Complaint DNA Fingerprinting</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#BC8CFF;"></div>
+        <div class="week-num">WEEK 02</div>
+        <div class="week-title">Sentence Embeddings + Similarity Search</div>
+        <div class="week-days">Days 8–14</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-ml">ML</span>Module 3 — Complaint DNA Agent</div>
+          <p>Every complaint gets a 384-dimensional vector embedding. New complaints are compared against the database to find duplicates (same customer, same issue) and clusters (different customers, same root cause). This is the Complaint DNA Fingerprinting innovation.</p>
+          <div class="install-label">Install</div>
+          <div class="install">pip install sentence-transformers torch</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Load model: <code>SentenceTransformer('all-MiniLM-L6-v2')</code> — free, fast, 384 dimensions, no API key needed.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Write <code>agents/dna_agent.py</code> — <code>generate_embedding(text: str) -> list[float]</code> function. Returns 384-dim vector.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Write <code>find_similar_complaints(embedding, complaint_type, db, threshold=0.75)</code> — runs the pgvector cosine similarity query against the complaints table filtered by same complaint_type. Returns top 5 matches with similarity scores.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Write clustering logic: if similarity > 0.90 AND same customer_id → mark as duplicate. If similarity > 0.75 AND different customer → add to existing cluster or create new cluster.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Write <code>DNAConsumer(BaseConsumer)</code> — consume from <code>complaints.translated</code>, call embedding + similarity, write <code>embedding</code> and <code>cluster_id</code> back to the complaint row in PostgreSQL. DNAConsumer consumes from <code>complaints.translated</code> topic — NOT <code>complaints.inbound</code>.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Test: insert 10 complaints — 3 should be similar. Verify the cluster_id groups them correctly.</div></div>
+          </div>
+          <div class="io-grid">
+            <div class="io-box"><div class="io-label io-in">Input</div><ul><li><code>complaint_id</code> (UUID)</li><li><code>raw_text</code> (string)</li><li><code>complaint_type</code> (string)</li></ul></div>
+            <div class="io-box"><div class="io-label io-out">Output</div><ul><li><code>embedding</code> — vector(384) stored in DB</li><li><code>cluster_id</code> — UUID or null</li><li><code>is_duplicate</code> — boolean</li><li><code>similar_complaints</code> — list of IDs</li></ul></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 3 -->
+  <div class="section">
+    <div class="section-title">Week 3 — Severity Scorer</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#D29922;"></div>
+        <div class="week-num">WEEK 03</div>
+        <div class="week-title">Composite Severity Score + SLA Tier Assignment</div>
+        <div class="week-days">Days 15–21</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-ml">ML</span>Module 4 — Severity Scorer Agent</div>
+          <p>Computes a weighted severity score (0–100) from multiple signals. Then assigns the complaint to one of 4 SLA tiers based on that score. No ML model needed here — this is a rule-based weighted formula.</p>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Write <code>agents/severity_agent.py</code> — <code>compute_severity(complaint: dict) -> dict</code>.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Implement scoring formula: complaint_type weight (fraud=30, regulatory=30, billing=20, service=10) + vip_customer bonus (+20) + regulatory_flag bonus (+30) + emotion_arc slope penalty (slope &lt; -0.15 adds +15) + reopen_count penalty (each reopen adds +5, max +20).</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Assign SLA tier: score ≥ 80 → REGULATORY (5h), score ≥ 60 → HIGH (24h), score ≥ 40 → MEDIUM (48h), else → NORMAL (72h).</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Write <code>SeverityConsumer(BaseConsumer)</code> — reads from <code>complaints.translated</code>, computes score, writes <code>severity_score</code> and <code>sla_tier</code> back to PostgreSQL row. SeverityConsumer consumes from <code>complaints.translated</code> topic — NOT <code>complaints.inbound</code>.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Write unit tests for all 4 SLA tier boundaries. Test with 20 different complaint combinations.</div></div>
+          </div>
+          <div class="io-grid">
+            <div class="io-box"><div class="io-label io-in">Input</div><ul><li><code>complaint_type</code></li><li><code>regulatory_flag</code> (bool)</li><li><code>vip_customer</code> (bool)</li><li><code>emotion_arc_slope</code> (float)</li><li><code>reopen_count</code> (int)</li></ul></div>
+            <div class="io-box"><div class="io-label io-out">Output</div><ul><li><code>severity_score</code> — float 0–100</li><li><code>sla_tier</code> — REGULATORY/HIGH/MEDIUM/NORMAL</li><li><code>sla_hours</code> — int (5/24/48/72)</li></ul></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 4 -->
+  <div class="section">
+    <div class="section-title">Week 4 — Emotion Arc Tracking</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#BC8CFF;"></div>
+        <div class="week-num">WEEK 04</div>
+        <div class="week-title">Per-Turn Sentiment Trajectory</div>
+        <div class="week-days">Days 22–28</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-ml">ML</span>Module 5 — Emotion Arc Agent</div>
+          <p>Tracks customer sentiment at every message turn — not one static score. Computes a slope (is sentiment improving or worsening?) and outputs a tone recommendation for the draft response. This is the Emotion Arc innovation.</p>
+          <div class="install-label">Install</div>
+          <div class="install">pip install transformers torch</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Load model: <code>pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment-latest")</code> — free HuggingFace model, works well for short messages.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Write <code>agents/emotion_agent.py</code> — <code>compute_emotion_arc(turns: list[str]) -> dict</code>.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">For each turn, get sentiment label (POSITIVE/NEGATIVE/NEUTRAL) and score. Convert to numeric: POSITIVE=+score, NEGATIVE=-score, NEUTRAL=0.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Compute slope: <code>(last_score - first_score) / max(len(turns)-1, 1)</code>. Negative slope = worsening. Positive = improving.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Set <code>escalation_signal = True</code> if slope &lt; -0.15. Set <code>recommended_tone</code>: slope &lt; 0 → "empathetic", regulatory_flag → "regulatory_formal", else → "professional".</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Write <code>EmotionConsumer(BaseConsumer)</code> — consume from <code>complaints.translated</code>, then write full <code>emotion_arc</code> JSONB to complaint row in PostgreSQL. EmotionConsumer consumes from <code>complaints.translated</code> topic — NOT <code>complaints.inbound</code>.</div></div>
+            <div class="step"><div class="step-num">7</div><div class="step-text">For single-turn complaints (first message only), still run it — slope will be 0, tone will be "professional" by default.</div></div>
+          </div>
+          <div class="io-grid">
+            <div class="io-box"><div class="io-label io-in">Input</div><ul><li><code>turns</code> — list of message strings (customer messages only)</li></ul></div>
+            <div class="io-box"><div class="io-label io-out">Output</div><ul><li><code>arc</code> — list of {turn, label, score}</li><li><code>arc_slope</code> — float</li><li><code>escalation_signal</code> — bool</li><li><code>recommended_tone</code> — string</li></ul></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 5 -->
+  <div class="section">
+    <div class="section-title">Week 5 — Breach Prediction Model</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#F85149;"></div>
+        <div class="week-num">WEEK 05</div>
+        <div class="week-title">Predictive Escalation Model</div>
+        <div class="week-days">Days 29–35</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-ml">ML</span>Module 6 — Breach Prediction Agent</div>
+          <p>Predicts whether a complaint will breach its SLA deadline at the moment it is created. Uses a RandomForest classifier trained on synthetic data for MVP. This is the Predictive Escalation innovation — acts before breach, not after.</p>
+          <div class="install-label">Install</div>
+          <div class="install">pip install scikit-learn joblib numpy pandas</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Generate synthetic training data in <code>ml/generate_training_data.py</code> — 5000 rows. Features: complaint_type (encoded), severity_score, queue_depth, agents_available, hour_of_day, day_of_week, historical_handle_time_p90. Label: did_breach (0 or 1). Use realistic distributions — ~25% breach rate.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Train in <code>ml/train_breach_model.py</code>: <code>RandomForestClassifier(n_estimators=100, random_state=42)</code>. Split 80/20, print accuracy and precision/recall on test set.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Save model: <code>joblib.dump(model, "ml/breach_predictor.pkl")</code>.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Write <code>agents/escalation_agent.py</code> — <code>predict_breach(features: dict) -> dict</code>. Loads the .pkl model, runs prediction, returns probability and pre_escalate flag (True if prob > 0.70).</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Write <code>EscalationConsumer(BaseConsumer)</code> — consume from <code>complaints.translated</code>, query current queue depth and agents_available from Redis (Pritesh will set these up — use mock values until Week 5), run prediction, write <code>breach_probability</code> and <code>pre_escalate</code> to complaint row. EscalationConsumer consumes from <code>complaints.translated</code> topic — NOT <code>complaints.inbound</code>.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">If <code>pre_escalate = True</code>, also publish a message to a new Kafka topic <code>escalations.predicted</code> — Pritesh's SLA engine will consume this.</div></div>
+          </div>
+          <div class="io-grid">
+            <div class="io-box"><div class="io-label io-in">Input</div><ul><li><code>complaint_type</code></li><li><code>severity_score</code></li><li><code>queue_depth</code> (from Redis)</li><li><code>agents_available</code> (from Redis)</li><li><code>hour_of_day</code>, <code>day_of_week</code></li></ul></div>
+            <div class="io-box"><div class="io-label io-out">Output</div><ul><li><code>breach_probability</code> — float 0–1</li><li><code>pre_escalate</code> — bool</li><li>Event on <code>escalations.predicted</code> if True</li></ul></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 6 -->
+  <div class="section">
+    <div class="section-title">Week 6 — Integration + Demo Prep</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#3FB950;"></div>
+        <div class="week-num">WEEK 06</div>
+        <div class="week-title">Wire Everything Together + Demo Flow</div>
+        <div class="week-days">Days 36–42</div>
+      </div>
+      <div class="week-body">
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div class="step-text">Run all 3 Kafka consumers (DNA, Emotion, Escalation) simultaneously. Publish one test complaint. Verify all 3 write their outputs to the same complaint row.</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text">Coordinate with Abhineet — his NLP classifier and severity scorer also write to same row. Do an end-to-end test: POST one complaint to FastAPI → Kafka → all agents → full enriched row in DB.</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text">Fix any race conditions — all agents write to different columns so conflicts are rare, but add <code>UPDATE complaints SET x = $1 WHERE id = $2</code> style atomic updates.</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-text">Prepare 5 demo complaints with different characteristics (one fraud + VIP, one regulatory, one low severity, two similar for DNA cluster demo). Insert them and show enriched results.</div></div>
+          <div class="step"><div class="step-num">5</div><div class="step-text">Document the model: what features it uses, what threshold triggers escalation, how to retrain when real data is available.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELIVERABLES SUMMARY -->
+  <div class="section">
+    <div class="section-title">Your Deliverables Summary</div>
+    <table class="sum-table">
+      <thead><tr><th>Module</th><th>File</th><th>Output</th></tr></thead>
+      <tbody>
+        <tr><td>Kafka Setup</td><td><code>kafka/producer.py</code>, <code>base_consumer.py</code></td><td>Working event bus + shared base class</td></tr>
+        <tr><td>PostgreSQL + pgvector</td><td><code>db/schema.sql</code>, <code>connection.py</code></td><td>Running DB + session factory for team</td></tr>
+        <tr><td>Sarvam Translation</td><td><code>services/translation_service.py</code>, <code>agents/translation_consumer.py</code></td><td>Language detected + English translation stored</td></tr>
+        <tr><td>Complaint DNA</td><td><code>agents/dna_agent.py</code></td><td>Embeddings stored, clusters identified</td></tr>
+        <tr><td>Severity Scorer</td><td><code>agents/severity_agent.py</code></td><td>0–100 score + SLA tier per complaint</td></tr>
+        <tr><td>Emotion Arc</td><td><code>agents/emotion_agent.py</code></td><td>Arc JSONB + slope + tone recommendation</td></tr>
+        <tr><td>Breach Predictor</td><td><code>agents/escalation_agent.py</code>, <code>ml/breach_predictor.pkl</code></td><td>Breach probability + pre_escalate flag</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- REPO SETUP -->
+  <div class="section">
+    <div class="section-title">Git Workflow</div>
+    <div class="install-label">Branch name</div>
+    <div class="install" style="color:var(--accent)">git checkout -b feature/akash-ml-pipeline</div>
+    <div style="margin-top:12px;">
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text">Fork the main repo. Create branch <code>feature/akash-ml-pipeline</code>.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text">Your folders: <code>kafka/</code>, <code>db/</code>, <code>services/translation_service.py</code>, <code>agents/translation_consumer.py</code>, <code>agents/dna_agent.py</code>, <code>agents/emotion_agent.py</code>, <code>agents/severity_agent.py</code>, <code>agents/escalation_agent.py</code>, <code>ml/</code>. Abhineet imports from <code>translation_service.py</code> but never edits it.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text">Push <code>docker-compose.yml</code> and <code>db/connection.py</code> as a PR by end of Day 3 of Week 1 — team needs this immediately.</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text">Never touch <code>api/</code> folder — that is Abhineet's. Never touch <code>frontend/</code> — that is Hemnat's.</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
