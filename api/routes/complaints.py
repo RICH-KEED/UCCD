@@ -2,6 +2,7 @@ from fastapi import APIRouter,Query,HTTPException
 from uuid import uuid4
 from datetime import datetime, timedelta, timezone
 from api.schemas.complaint import ComplaintCreate, ComplaintResponse, ComplaintListResponse
+from agents.nlp_classifier import classify_complaint
 
 
 router = APIRouter(prefix="/api/v1/complaints", tags=["complaints"])
@@ -37,6 +38,7 @@ for i in range(20):
 
 @router.post("",response_model=ComplaintResponse,status_code=201)
 def create_complaint(complaint: ComplaintCreate):
+    classification = classify_complaint(complaint.raw_text)
     new_complaint = {
         "id": uuid4(),
         **complaint.model_dump(),
@@ -44,11 +46,12 @@ def create_complaint(complaint: ComplaintCreate):
         "sla_tier": None,
         "sla_deadline": None,
         "sla_breached": False,
-        "complaint_type": None,
+        "complaint_type": classification["complaint_type"],
         "type_confidence": None,
-        "product_code": None,
-        "intent": None,
+        "product_code": classification["product_code"],
+        "intent": classification["intent"],
         "severity_score": None,
+        "regulatory_obligation": classification["regulatory_obligation"],
         "breach_probability": None,
         "assigned_to": None,
         "ai_draft": None,

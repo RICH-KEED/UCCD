@@ -23,6 +23,7 @@ class Complaint(Base):
     voice_transcript = Column(JSONB, nullable=True)
     attachments = Column(JSONB, nullable=True)
     bot_slots = Column(JSONB, nullable=True)
+    regulatory_obligation = Column(String, nullable=True)
 
     # AI-filled (all nullable, agents fill these later)
     complaint_type = Column(String, nullable=True)

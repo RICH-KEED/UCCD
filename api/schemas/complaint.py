@@ -33,6 +33,7 @@ class ComplaintResponse(BaseModel):
     customer_id: str 
     channel: str
     source_ref: Optional[str] = None
+    regulatory_obligation: Optional[str] = None
     raw_text: str
     regulatory_flag: Optional[bool] = False
     vip_customer: Optional[bool] = False
