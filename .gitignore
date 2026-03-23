@@ -1,0 +1,28 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Test and coverage outputs
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# IDE and editor files
+.vscode/
+.idea/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
