@@ -109,7 +109,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
     <a class="top-link master" href="Roadmap_Master.html">Master Roadmap</a>
     <a class="top-link active" aria-current="page" href="Roadmap_Akash.html">Akash</a>
     <a class="top-link" href="Roadmap_Abhineet.html">Abhineet</a>
-    <a class="top-link" href="Roadmap_Hemnat.html">Hemnat</a>
+    <a class="top-link" href="Roadmap_Hemant.html">Hemant</a>
     <a class="top-link" href="Roadmap_Pritesh.html">Pritesh</a>
   </nav>
 
@@ -128,7 +128,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
   <div class="section">
     <div class="section-title">Your Responsibility</div>
     <p>You own two areas. First, all ML models — sentence embeddings, severity scoring, emotion arc, and breach prediction. Second, the infrastructure backbone — Kafka event bus setup, PostgreSQL + pgvector configuration, and the consumer skeleton that connects the message queue to the ML pipeline. Abhineet will build the FastAPI app and Claude agents on top of your infrastructure.</p>
-    <p><strong style="color:var(--white)">Critical:</strong> Your Week 1 Kafka + database setup directly unblocks Abhineet, Hemnat, and Pritesh. This is the most important week in the project.</p>
+    <p><strong style="color:var(--white)">Critical:</strong> Your Week 1 Kafka + database setup directly unblocks Abhineet, Hemant, and Pritesh. This is the most important week in the project.</p>
   </div>
 
   <!-- WEEK 1 -->
@@ -366,7 +366,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
         <div class="step"><div class="step-num">1</div><div class="step-text">Fork the main repo. Create branch <code>feature/akash-ml-pipeline</code>.</div></div>
         <div class="step"><div class="step-num">2</div><div class="step-text">Your folders: <code>kafka/</code>, <code>db/</code>, <code>services/translation_service.py</code>, <code>agents/translation_consumer.py</code>, <code>agents/dna_agent.py</code>, <code>agents/emotion_agent.py</code>, <code>agents/severity_agent.py</code>, <code>agents/escalation_agent.py</code>, <code>ml/</code>. Abhineet imports from <code>translation_service.py</code> but never edits it.</div></div>
         <div class="step"><div class="step-num">3</div><div class="step-text">Push <code>docker-compose.yml</code> and <code>db/connection.py</code> as a PR by end of Day 3 of Week 1 — team needs this immediately.</div></div>
-        <div class="step"><div class="step-num">4</div><div class="step-text">Never touch <code>api/</code> folder — that is Abhineet's. Never touch <code>frontend/</code> — that is Hemnat's.</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text">Never touch <code>api/</code> folder — that is Abhineet's. Never touch <code>frontend/</code> — that is Hemant's.</div></div>
       </div>
     </div>
   </div>
