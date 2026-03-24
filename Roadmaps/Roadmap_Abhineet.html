@@ -82,7 +82,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
     <a class="top-link master" href="Roadmap_Master.html">Master Roadmap</a>
     <a class="top-link" href="Roadmap_Akash.html">Akash</a>
     <a class="top-link active" aria-current="page" href="Roadmap_Abhineet.html">Abhineet</a>
-    <a class="top-link" href="Roadmap_Hemnat.html">Hemnat</a>
+    <a class="top-link" href="Roadmap_Hemant.html">Hemant</a>
     <a class="top-link" href="Roadmap_Pritesh.html">Pritesh</a>
   </nav>
 
@@ -99,7 +99,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
 
   <div class="section">
     <div class="section-title">Your Responsibility</div>
-    <p>You own the FastAPI application — every API endpoint, the database models (ORM layer on top of Akash's schema), the Claude API integration for classification and draft generation, and the LangGraph orchestrator that runs all 6 agents in parallel. Hemnat's frontend calls your APIs. Pritesh's SLA engine and auth middleware plug into your FastAPI app.</p>
+    <p>You own the FastAPI application — every API endpoint, the database models (ORM layer on top of Akash's schema), the Claude API integration for classification and draft generation, and the LangGraph orchestrator that runs all 6 agents in parallel. Hemant's frontend calls your APIs. Pritesh's SLA engine and auth middleware plug into your FastAPI app.</p>
     <p><strong style="color:var(--white)">Week 1 is shared with Akash.</strong> While Akash sets up Kafka + raw DB schema, you set up the FastAPI app + SQLAlchemy models. By end of Week 1 the team has working mock endpoints to build against.</p>
   </div>
 
@@ -116,7 +116,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
       <div class="week-body">
         <div class="module">
           <div class="module-name"><span class="module-badge mb-api">FASTAPI</span>Module 1 — Project Structure + ORM Models</div>
-          <p>Set up the FastAPI project. Create SQLAlchemy ORM models that map to Akash's PostgreSQL schema. Create the core complaint endpoints that Hemnat needs to start building the frontend.</p>
+          <p>Set up the FastAPI project. Create SQLAlchemy ORM models that map to Akash's PostgreSQL schema. Create the core complaint endpoints that Hemant needs to start building the frontend.</p>
           <div class="install-label">Install</div>
           <div class="install">pip install fastapi uvicorn sqlalchemy alembic pydantic python-jose passlib python-multipart</div>
           <div class="steps">
@@ -124,14 +124,14 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
             <div class="step"><div class="step-num">2</div><div class="step-text">Write <code>api/models/complaint.py</code> — SQLAlchemy model matching Akash's complaints table exactly. Include all columns: id, customer_id, channel, raw_text, complaint_type, severity_score, sla_tier, status, emotion_arc, embedding, cluster_id, breach_probability, created_at.</div></div>
             <div class="step"><div class="step-num">3</div><div class="step-text">Write Pydantic schemas in <code>api/schemas/complaint.py</code>: <code>ComplaintCreate</code> (POST body), <code>ComplaintResponse</code> (GET response), <code>ComplaintListResponse</code> (paginated list).</div></div>
             <div class="step"><div class="step-num">4</div><div class="step-text">Write <code>api/routes/complaints.py</code> with these endpoints: POST <code>/api/v1/complaints</code>, GET <code>/api/v1/complaints</code> (with filters: status, tier, channel, page, limit), GET <code>/api/v1/complaints/{id}</code>.</div></div>
-            <div class="step"><div class="step-num">5</div><div class="step-text">For Week 1, these endpoints return mock data — hardcoded fake complaints. AI enrichment comes in Week 3. Hemnat can start building frontend NOW against these mock responses.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">For Week 1, these endpoints return mock data — hardcoded fake complaints. AI enrichment comes in Week 3. Hemant can start building frontend NOW against these mock responses.</div></div>
             <div class="step"><div class="step-num">6</div><div class="step-text">Start FastAPI with: <code>uvicorn api.main:app --reload --port 8000</code>. Share the Swagger URL (<code>http://localhost:8000/docs</code>) with the team by Day 5.</div></div>
           </div>
           <div class="io-grid">
             <div class="io-box"><div class="io-label io-in">Input (POST /complaints)</div><ul><li><code>customer_id</code></li><li><code>channel</code></li><li><code>raw_text</code></li><li><code>regulatory_flag</code> (optional)</li></ul></div>
             <div class="io-box"><div class="io-label io-out">Output</div><ul><li><code>complaint_id</code> (UUID)</li><li><code>status: "queued"</code></li><li><code>sla_deadline</code> (mock: +48h)</li><li>HTTP 201 Created</li></ul></div>
           </div>
-          <div class="note">Share Swagger docs link with Hemnat by Day 5 of Week 1. He needs exact request/response shapes to build the frontend against.</div>
+          <div class="note">Share Swagger docs link with Hemant by Day 5 of Week 1. He needs exact request/response shapes to build the frontend against.</div>
         </div>
       </div>
     </div>
@@ -253,22 +253,22 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
       <div class="week-header">
         <div class="week-dot" style="background:#D29922;"></div>
         <div class="week-num">WEEK 05</div>
-        <div class="week-title">All Remaining Routes Hemnat Needs</div>
+        <div class="week-title">All Remaining Routes Hemant Needs</div>
         <div class="week-days">Days 29–35</div>
       </div>
       <div class="week-body">
         <div class="module">
           <div class="module-name"><span class="module-badge mb-api">FASTAPI</span>Module 6 — Complete API Surface</div>
-          <p>Build all remaining endpoints. Hemnat's frontend is already partially built — he needs these routes to complete every screen.</p>
+          <p>Build all remaining endpoints. Hemant's frontend is already partially built — he needs these routes to complete every screen.</p>
           <div class="steps">
             <div class="step"><div class="step-num">1</div><div class="step-text">PUT <code>/api/v1/complaints/{id}/status</code> — update status. Validate transitions: only new→in_progress, in_progress→resolved, any→escalated are valid.</div></div>
             <div class="step"><div class="step-num">2</div><div class="step-text">GET <code>/api/v1/escalations</code> — return all complaints where status=escalated OR (breach_probability &gt; 0.70 AND status!=resolved). Sorted by urgency. This powers the supervisor escalation queue.</div></div>
             <div class="step"><div class="step-num">3</div><div class="step-text">GET <code>/api/v1/agents/load</code> — return list of agents with their current load score (from Redis via Pritesh's service). If Redis not ready, return mock data.</div></div>
             <div class="step"><div class="step-num">4</div><div class="step-text">GET <code>/api/v1/analytics/trends</code> — query DB for complaint counts grouped by type and day for the past 7/30 days. Return JSON for charts.</div></div>
             <div class="step"><div class="step-num">5</div><div class="step-text">POST <code>/api/v1/simulation/run</code> — body: {condition, resolution_action}. Query DB with the condition, count matching open complaints, calculate estimates. Return impact object.</div></div>
-            <div class="step"><div class="step-num">6</div><div class="step-text">GET <code>/api/v1/complaints/{id}/history</code> — return all communication turns for a complaint sorted by timestamp. Hemnat needs this for the conversation history panel.</div></div>
-            <div class="step"><div class="step-num">7</div><div class="step-text">Add CORS middleware to FastAPI: <code>allow_origins=["http://localhost:3000"]</code> so Hemnat's React app can call your API.</div></div>
-            <div class="step"><div class="step-num">8</div><div class="step-text">Add GET <code>/api/v1/ai/translate-preview?text=...&target_lang=...</code> endpoint. Calls <code>translation_service.translate(text, "en-IN", target_lang)</code> imported from Akash's file. Returns translated string. Hemnat calls this on 1-second debounce as agent types. Skip if <code>target_lang</code> is <code>en-IN</code>.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">GET <code>/api/v1/complaints/{id}/history</code> — return all communication turns for a complaint sorted by timestamp. Hemant needs this for the conversation history panel.</div></div>
+            <div class="step"><div class="step-num">7</div><div class="step-text">Add CORS middleware to FastAPI: <code>allow_origins=["http://localhost:3000"]</code> so Hemant's React app can call your API.</div></div>
+            <div class="step"><div class="step-num">8</div><div class="step-text">Add GET <code>/api/v1/ai/translate-preview?text=...&target_lang=...</code> endpoint. Calls <code>translation_service.translate(text, "en-IN", target_lang)</code> imported from Akash's file. Returns translated string. Hemant calls this on 1-second debounce as agent types. Skip if <code>target_lang</code> is <code>en-IN</code>.</div></div>
           </div>
         </div>
 
@@ -307,7 +307,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
           <div class="step"><div class="step-num">2</div><div class="step-text">Add proper error handling: 404 for missing complaints, 422 for validation errors, 500 with useful message for DB errors. Use FastAPI HTTPException.</div></div>
           <div class="step"><div class="step-num">3</div><div class="step-text">Add request logging middleware — log every request with method, path, status code, and response time. Essential for demo debugging.</div></div>
           <div class="step"><div class="step-num">4</div><div class="step-text">Seed demo data: write a script <code>scripts/seed_demo.py</code> that inserts 20 realistic complaints across different types, severities, and statuses. Run this before every demo.</div></div>
-          <div class="step"><div class="step-num">5</div><div class="step-text">Share final API documentation URL with Hemnat and Pritesh. Fix any endpoint issues they report.</div></div>
+          <div class="step"><div class="step-num">5</div><div class="step-text">Share final API documentation URL with Hemant and Pritesh. Fix any endpoint issues they report.</div></div>
         </div>
       </div>
     </div>
