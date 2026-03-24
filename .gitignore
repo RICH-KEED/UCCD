@@ -2,6 +2,7 @@
 .venv/
 venv/
 env/
+.env/
 
 # Python cache and bytecode
 __pycache__/
