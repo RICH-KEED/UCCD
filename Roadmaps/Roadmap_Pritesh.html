@@ -74,7 +74,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
     <a class="top-link master" href="Roadmap_Master.html">Master Roadmap</a>
     <a class="top-link" href="Roadmap_Akash.html">Akash</a>
     <a class="top-link" href="Roadmap_Abhineet.html">Abhineet</a>
-    <a class="top-link" href="Roadmap_Hemnat.html">Hemnat</a>
+    <a class="top-link" href="Roadmap_Hemant.html">Hemant</a>
     <a class="top-link active" aria-current="page" href="Roadmap_Pritesh.html">Pritesh</a>
   </nav>
 
@@ -186,7 +186,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
           <div class="steps">
             <div class="step"><div class="step-num">1</div><div class="step-text">Write <code>services/sla_service.py</code>. Connect to Redis: <code>r = redis.Redis(host="localhost", port=6379, decode_responses=True)</code>.</div></div>
             <div class="step"><div class="step-num">2</div><div class="step-text">Write <code>set_sla_timer(complaint_id: str, sla_tier: str)</code> — maps tier to hours (REGULATORY=5, HIGH=24, MEDIUM=48, NORMAL=72), calls <code>r.setex(f"sla:{complaint_id}", hours*3600, sla_tier)</code>. Also stores metadata: <code>r.hset(f"sla_meta:{complaint_id}", mapping={"deadline": iso_string, "tier": sla_tier, "alert_50": "0", "alert_75": "0", "alert_90": "0"})</code>.</div></div>
-            <div class="step"><div class="step-num">3</div><div class="step-text">Write <code>get_sla_status(complaint_id: str) -> dict</code> — returns time remaining in seconds, percentage elapsed, deadline ISO string. Used by Hemnat's frontend countdown timers.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Write <code>get_sla_status(complaint_id: str) -> dict</code> — returns time remaining in seconds, percentage elapsed, deadline ISO string. Used by Hemant's frontend countdown timers.</div></div>
             <div class="step"><div class="step-num">4</div><div class="step-text">Write <code>check_all_slas()</code> — background job that runs every 60 seconds. Scans all <code>sla:*</code> keys. For each: compute pct_elapsed from TTL. If ≥ 0.50 and alert_50 not sent → call <code>fire_sla_alert(complaint_id, "50_PERCENT")</code> and set flag. Same for 75% and 90%.</div></div>
             <div class="step"><div class="step-num">5</div><div class="step-text">Write <code>fire_sla_alert(complaint_id, alert_type)</code> — calls Abhineet's WebSocket broadcast: <code>manager.broadcast({"type": "sla_alert", "alert_type": alert_type, "complaint_id": complaint_id})</code>. Also calls <code>supervisor_notification_service</code>.</div></div>
             <div class="step"><div class="step-num">6</div><div class="step-text">Handle breach: when <code>r.ttl(key)</code> returns -2 (key expired), update complaint status to "breached" in PostgreSQL and broadcast <code>{"type": "breach_occurred", "complaint_id": ...}</code>.</div></div>
@@ -221,7 +221,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
             <div class="step"><div class="step-num">2</div><div class="step-text">Write <code>compute_agent_load(agent_id: str) -> float</code>: queue_depth = <code>r.llen(f"queue:{agent_id}")</code>, complexity_avg = <code>float(r.get(f"complexity:{agent_id}") or 0)</code>, shift_hours = hours since login from Redis. Load = (queue*0.35 + complexity*0.30 + shift_fatigue*0.15 + 0.20). Clamp 0–1.</div></div>
             <div class="step"><div class="step-num">3</div><div class="step-text">Write <code>get_best_agent(complaint_severity: str, db) -> str</code> — gets all active agents, computes load for each, returns the agent_id with lowest load who has the right skill (severity level). This is called by the orchestrator when assigning a complaint.</div></div>
             <div class="step"><div class="step-num">4</div><div class="step-text">Write <code>check_agent_loads()</code> background job — runs every 5 minutes. Any agent with load > 0.80 → broadcast <code>{"type": "agent_overload", "agent_id": ..., "load": ...}</code> to WebSocket.</div></div>
-            <div class="step"><div class="step-num">5</div><div class="step-text">Add route to Abhineet's API: GET <code>/api/v1/agents/load</code> — calls <code>compute_agent_load</code> for all active agents, returns list for Hemnat's load bars.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Add route to Abhineet's API: GET <code>/api/v1/agents/load</code> — calls <code>compute_agent_load</code> for all active agents, returns list for Hemant's load bars.</div></div>
           </div>
         </div>
 
@@ -231,7 +231,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
           <div class="steps">
             <div class="step"><div class="step-num">1</div><div class="step-text">Write <code>services/regulatory_service.py</code>. When a complaint with <code>regulatory_flag=True</code> arrives, set: <code>r.setex(f"regulatory:{complaint_id}", 5*3600, "REGULATORY")</code> (5 hours for Banking Ombudsman, 30 days for RBI formal — use 5h for MVP).</div></div>
             <div class="step"><div class="step-num">2</div><div class="step-text">Write <code>check_regulatory_deadlines()</code> — separate background job, runs every 15 minutes. Checks all <code>regulatory:*</code> keys. At 80% elapsed: broadcast urgent alert. At expiry: flag complaint as REGULATORY_BREACH, notify compliance team via WebSocket.</div></div>
-            <div class="step"><div class="step-num">3</div><div class="step-text">Write <code>get_regulatory_status(complaint_id) -> dict</code> — returns time remaining, percentage, deadline. Hemnat uses this for the countdown timers on the Regulatory Dashboard.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Write <code>get_regulatory_status(complaint_id) -> dict</code> — returns time remaining, percentage, deadline. Hemant uses this for the countdown timers on the Regulatory Dashboard.</div></div>
           </div>
         </div>
       </div>
