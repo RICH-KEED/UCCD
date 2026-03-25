@@ -83,7 +83,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
     <a class="top-link" href="Roadmap_Akash.html">Akash</a>
     <a class="top-link active" aria-current="page" href="Roadmap_Abhineet.html">Abhineet</a>
     <a class="top-link" href="Roadmap_Hemant.html">Hemant</a>
-    <a class="top-link" href="Roadmap_Pritesh.html">Pritesh</a>
+    <a class="top-link" href="Roadmap_Suryansh.html">Suryansh</a>
   </nav>
 
   <div class="header">
@@ -99,7 +99,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
 
   <div class="section">
     <div class="section-title">Your Responsibility</div>
-    <p>You own the FastAPI application — every API endpoint, the database models (ORM layer on top of Akash's schema), the Claude API integration for classification and draft generation, and the LangGraph orchestrator that runs all 6 agents in parallel. Hemant's frontend calls your APIs. Pritesh's SLA engine and auth middleware plug into your FastAPI app.</p>
+    <p>You own the FastAPI application — every API endpoint, the database models (ORM layer on top of Akash's schema), the Claude API integration for classification and draft generation, and the LangGraph orchestrator that runs all 6 agents in parallel. Hemant's frontend calls your APIs. Suryansh's SLA engine and auth middleware plug into your FastAPI app.</p>
     <p><strong style="color:var(--white)">Week 1 is shared with Akash.</strong> While Akash sets up Kafka + raw DB schema, you set up the FastAPI app + SQLAlchemy models. By end of Week 1 the team has working mock endpoints to build against.</p>
   </div>
 
@@ -263,7 +263,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
           <div class="steps">
             <div class="step"><div class="step-num">1</div><div class="step-text">PUT <code>/api/v1/complaints/{id}/status</code> — update status. Validate transitions: only new→in_progress, in_progress→resolved, any→escalated are valid.</div></div>
             <div class="step"><div class="step-num">2</div><div class="step-text">GET <code>/api/v1/escalations</code> — return all complaints where status=escalated OR (breach_probability &gt; 0.70 AND status!=resolved). Sorted by urgency. This powers the supervisor escalation queue.</div></div>
-            <div class="step"><div class="step-num">3</div><div class="step-text">GET <code>/api/v1/agents/load</code> — return list of agents with their current load score (from Redis via Pritesh's service). If Redis not ready, return mock data.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">GET <code>/api/v1/agents/load</code> — return list of agents with their current load score (from Redis via Suryansh's service). If Redis not ready, return mock data.</div></div>
             <div class="step"><div class="step-num">4</div><div class="step-text">GET <code>/api/v1/analytics/trends</code> — query DB for complaint counts grouped by type and day for the past 7/30 days. Return JSON for charts.</div></div>
             <div class="step"><div class="step-num">5</div><div class="step-text">POST <code>/api/v1/simulation/run</code> — body: {condition, resolution_action}. Query DB with the condition, count matching open complaints, calculate estimates. Return impact object.</div></div>
             <div class="step"><div class="step-num">6</div><div class="step-text">GET <code>/api/v1/complaints/{id}/history</code> — return all communication turns for a complaint sorted by timestamp. Hemant needs this for the conversation history panel.</div></div>
@@ -307,7 +307,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
           <div class="step"><div class="step-num">2</div><div class="step-text">Add proper error handling: 404 for missing complaints, 422 for validation errors, 500 with useful message for DB errors. Use FastAPI HTTPException.</div></div>
           <div class="step"><div class="step-num">3</div><div class="step-text">Add request logging middleware — log every request with method, path, status code, and response time. Essential for demo debugging.</div></div>
           <div class="step"><div class="step-num">4</div><div class="step-text">Seed demo data: write a script <code>scripts/seed_demo.py</code> that inserts 20 realistic complaints across different types, severities, and statuses. Run this before every demo.</div></div>
-          <div class="step"><div class="step-num">5</div><div class="step-text">Share final API documentation URL with Hemant and Pritesh. Fix any endpoint issues they report.</div></div>
+          <div class="step"><div class="step-num">5</div><div class="step-text">Share final API documentation URL with Hemant and Suryansh. Fix any endpoint issues they report.</div></div>
         </div>
       </div>
     </div>
