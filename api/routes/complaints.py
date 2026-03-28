@@ -1,4 +1,4 @@
-from fastapi import APIRouter,Query,HTTPException,Depends
+from fastapi import APIRouter,Query,HTTPException,Depends,BackgroundTasks
 from uuid import uuid4
 from datetime import datetime, timedelta, timezone
 from api.schemas.complaint import ComplaintCreate, ComplaintResponse, ComplaintListResponse
@@ -6,12 +6,12 @@ from agents.nlp_classifier import classify_complaint
 from api.db.session import get_db
 from sqlalchemy.orm import Session
 from api.models.complaint import Complaint
+from agents.orchestrator import run_pipeline
 
 router = APIRouter(prefix="/api/v1/complaints", tags=["complaints"])
 
-@router.post("",response_model=ComplaintResponse,status_code=201)
-def create_complaint(complaint: ComplaintCreate,db: Session=Depends(get_db)):
-    classification = classify_complaint(complaint.raw_text)
+@router.post("",response_model=ComplaintResponse,status_code=201,)
+def create_complaint(complaint: ComplaintCreate,background_tasks: BackgroundTasks,db: Session=Depends(get_db)):
     new_complaint = {
         "id": uuid4(),
         **complaint.model_dump(),
@@ -19,12 +19,12 @@ def create_complaint(complaint: ComplaintCreate,db: Session=Depends(get_db)):
         "sla_tier": None,
         "sla_deadline": None,
         "sla_breached": False,
-        "complaint_type": classification["complaint_type"],
+        "complaint_type": None,
         "type_confidence": None,
-        "product_code": classification["product_code"],
-        "intent": classification["intent"],
+        "product_code": None,
+        "intent": None,
         "severity_score": None,
-        "regulatory_obligation": classification["regulatory_obligation"],
+        "regulatory_obligation": None,
         "breach_probability": None,
         "assigned_to": None,
         "ai_draft": None,
@@ -37,6 +37,19 @@ def create_complaint(complaint: ComplaintCreate,db: Session=Depends(get_db)):
     db.add(db_complaint)
     db.commit()
     db.refresh(db_complaint)
+
+
+    background_tasks.add_task(
+        run_pipeline,
+        complaint_id=str(db_complaint.id),
+        raw_text=complaint.raw_text,
+        channel=complaint.channel,
+        customer_id=complaint.customer_id,
+        bot_slots=complaint.bot_slots,
+        language_code=complaint.language_code
+    )
+
+
     return db_complaint
 
 @router.get("",response_model=ComplaintListResponse)
