@@ -11,6 +11,8 @@ class ComplaintCreate(BaseModel):
     regulatory_flag: Optional[bool] = False
     vip_customer: Optional[bool] = False
     priority_tier: Optional[int] = 4
+    bot_slots: Optional[dict] = None
+    language_code: Optional[str] = None
 
 class ComplaintResponse(BaseModel):
     id: UUID
@@ -20,7 +22,7 @@ class ComplaintResponse(BaseModel):
     product_code: Optional[str]= None
     intent: Optional[str]= None
     severity_score: Optional[float] = None
-    sla_tier: Optional[int] = None
+    sla_tier: Optional[str] = None
     breach_probability: Optional[float] = None
     sla_deadline: Optional[datetime] = None
     sla_breached: bool = False
@@ -38,6 +40,13 @@ class ComplaintResponse(BaseModel):
     regulatory_flag: Optional[bool] = False
     vip_customer: Optional[bool] = False
     priority_tier: Optional[int] = 4
+    bot_slots: Optional[dict] = None
+    language_code: Optional[str] = None
+    viral_risk_score: Optional[float] = None
+    emotion_arc: Optional[dict] = None
+    escalation_reason: Optional[str] = None
+    resolution_notes: Optional[str] = None
+    updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 

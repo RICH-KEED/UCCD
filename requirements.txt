@@ -9,3 +9,4 @@ python-multipart
 psycopg2-binary
 dotenv
 groq
+langgraph

@@ -23,7 +23,7 @@ class Complaint(Base):
     voice_transcript = Column(JSONB, nullable=True)
     attachments = Column(JSONB, nullable=True)
     bot_slots = Column(JSONB, nullable=True)
-    regulatory_obligation = Column(String, nullable=True)
+    
 
     # AI-filled (all nullable, agents fill these later)
     complaint_type = Column(String, nullable=True)
@@ -32,7 +32,7 @@ class Complaint(Base):
     intent = Column(String, nullable=True)
     regulatory_obligation = Column(String, nullable=True)
     severity_score = Column(Float, nullable=True)
-    sla_tier = Column(Integer, nullable=True)
+    sla_tier = Column(String, nullable=True)
     emotion_arc = Column(JSONB, nullable=True)
     cluster_id = Column(String, nullable=True)
     breach_probability = Column(Float, nullable=True)
@@ -53,6 +53,7 @@ class Complaint(Base):
     status = Column(String, default="queued", nullable=False)
     assigned_to = Column(String, nullable=True)
     resolution_notes = Column(Text, nullable=True)
+    pre_escalate = Column(Boolean, default=False, nullable=True)
     escalation_reason = Column(String, nullable=True)
 
     # Timestamps
