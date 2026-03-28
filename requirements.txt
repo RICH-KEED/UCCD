@@ -9,4 +9,3 @@ python-multipart
 psycopg2-binary
 dotenv
 groq
-psycopg2
