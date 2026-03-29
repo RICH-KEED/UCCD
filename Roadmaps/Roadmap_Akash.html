@@ -109,8 +109,8 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
     <a class="top-link master" href="Roadmap_Master.html">Master Roadmap</a>
     <a class="top-link active" aria-current="page" href="Roadmap_Akash.html">Akash</a>
     <a class="top-link" href="Roadmap_Abhineet.html">Abhineet</a>
-    <a class="top-link" href="Roadmap_Hemnat.html">Hemnat</a>
-    <a class="top-link" href="Roadmap_Pritesh.html">Pritesh</a>
+    <a class="top-link" href="Roadmap_Hemant.html">Hemant</a>
+    <a class="top-link" href="Roadmap_Suryansh.html">Suryansh</a>
   </nav>
 
   <div class="header">
@@ -128,7 +128,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
   <div class="section">
     <div class="section-title">Your Responsibility</div>
     <p>You own two areas. First, all ML models — sentence embeddings, severity scoring, emotion arc, and breach prediction. Second, the infrastructure backbone — Kafka event bus setup, PostgreSQL + pgvector configuration, and the consumer skeleton that connects the message queue to the ML pipeline. Abhineet will build the FastAPI app and Claude agents on top of your infrastructure.</p>
-    <p><strong style="color:var(--white)">Critical:</strong> Your Week 1 Kafka + database setup directly unblocks Abhineet, Hemnat, and Pritesh. This is the most important week in the project.</p>
+    <p><strong style="color:var(--white)">Critical:</strong> Your Week 1 Kafka + database setup directly unblocks Abhineet, Hemant, and Suryansh. This is the most important week in the project.</p>
   </div>
 
   <!-- WEEK 1 -->
@@ -305,8 +305,8 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
             <div class="step"><div class="step-num">2</div><div class="step-text">Train in <code>ml/train_breach_model.py</code>: <code>RandomForestClassifier(n_estimators=100, random_state=42)</code>. Split 80/20, print accuracy and precision/recall on test set.</div></div>
             <div class="step"><div class="step-num">3</div><div class="step-text">Save model: <code>joblib.dump(model, "ml/breach_predictor.pkl")</code>.</div></div>
             <div class="step"><div class="step-num">4</div><div class="step-text">Write <code>agents/escalation_agent.py</code> — <code>predict_breach(features: dict) -> dict</code>. Loads the .pkl model, runs prediction, returns probability and pre_escalate flag (True if prob > 0.70).</div></div>
-            <div class="step"><div class="step-num">5</div><div class="step-text">Write <code>EscalationConsumer(BaseConsumer)</code> — consume from <code>complaints.translated</code>, query current queue depth and agents_available from Redis (Pritesh will set these up — use mock values until Week 5), run prediction, write <code>breach_probability</code> and <code>pre_escalate</code> to complaint row. EscalationConsumer consumes from <code>complaints.translated</code> topic — NOT <code>complaints.inbound</code>.</div></div>
-            <div class="step"><div class="step-num">6</div><div class="step-text">If <code>pre_escalate = True</code>, also publish a message to a new Kafka topic <code>escalations.predicted</code> — Pritesh's SLA engine will consume this.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Write <code>EscalationConsumer(BaseConsumer)</code> — consume from <code>complaints.translated</code>, query current queue depth and agents_available from Redis (Suryansh will set these up — use mock values until Week 5), run prediction, write <code>breach_probability</code> and <code>pre_escalate</code> to complaint row. EscalationConsumer consumes from <code>complaints.translated</code> topic — NOT <code>complaints.inbound</code>.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">If <code>pre_escalate = True</code>, also publish a message to a new Kafka topic <code>escalations.predicted</code> — Suryansh's SLA engine will consume this.</div></div>
           </div>
           <div class="io-grid">
             <div class="io-box"><div class="io-label io-in">Input</div><ul><li><code>complaint_type</code></li><li><code>severity_score</code></li><li><code>queue_depth</code> (from Redis)</li><li><code>agents_available</code> (from Redis)</li><li><code>hour_of_day</code>, <code>day_of_week</code></li></ul></div>
@@ -366,7 +366,7 @@ p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
         <div class="step"><div class="step-num">1</div><div class="step-text">Fork the main repo. Create branch <code>feature/akash-ml-pipeline</code>.</div></div>
         <div class="step"><div class="step-num">2</div><div class="step-text">Your folders: <code>kafka/</code>, <code>db/</code>, <code>services/translation_service.py</code>, <code>agents/translation_consumer.py</code>, <code>agents/dna_agent.py</code>, <code>agents/emotion_agent.py</code>, <code>agents/severity_agent.py</code>, <code>agents/escalation_agent.py</code>, <code>ml/</code>. Abhineet imports from <code>translation_service.py</code> but never edits it.</div></div>
         <div class="step"><div class="step-num">3</div><div class="step-text">Push <code>docker-compose.yml</code> and <code>db/connection.py</code> as a PR by end of Day 3 of Week 1 — team needs this immediately.</div></div>
-        <div class="step"><div class="step-num">4</div><div class="step-text">Never touch <code>api/</code> folder — that is Abhineet's. Never touch <code>frontend/</code> — that is Hemnat's.</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-text">Never touch <code>api/</code> folder — that is Abhineet's. Never touch <code>frontend/</code> — that is Hemant's.</div></div>
       </div>
     </div>
   </div>

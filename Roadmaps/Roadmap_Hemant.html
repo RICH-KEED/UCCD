@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hemant — UCCD Roadmap</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#0D1117;--surface:#161B22;--border:#21262D;--accent:#58A6FF;--green:#3FB950;--amber:#D29922;--red:#F85149;--purple:#BC8CFF;--teal:#39D353;--text:#C9D1D9;--muted:#8B949E;--white:#F0F6FC;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;}
+.page{max-width:900px;margin:0 auto;padding:40px 32px;}
+.header{border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:32px;}
+.role-badge{display:inline-block;background:rgba(63,185,80,.12);border:1px solid rgba(63,185,80,.3);color:var(--green);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;font-family:'IBM Plex Mono';margin-bottom:12px;}
+.name{font-size:32px;font-weight:700;color:var(--white);margin-bottom:4px;}
+.project{font-size:14px;color:var(--muted);}
+.meta-row{display:flex;gap:24px;margin-top:16px;flex-wrap:wrap;}
+.meta-item{font-size:12px;color:var(--muted);}.meta-item span{color:var(--text);font-weight:600;}
+.section{margin-bottom:40px;}
+.section-title{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.week{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;}
+.week-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);}
+.week-num{font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:var(--muted);}
+.week-title{font-size:15px;font-weight:600;color:var(--white);}
+.week-days{margin-left:auto;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono';}
+.week-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.week-body{padding:16px;}
+.module{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.module:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.module-name{font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.module-badge{font-size:10px;font-weight:600;padding:1px 7px;border-radius:3px;font-family:'IBM Plex Mono';}
+.mb-screen{background:rgba(63,185,80,.15);color:var(--green);}
+.mb-component{background:rgba(88,166,255,.15);color:var(--accent);}
+.mb-ws{background:rgba(188,140,255,.15);color:var(--purple);}
+.steps{margin-top:10px;}
+.step{display:flex;gap:10px;margin-bottom:6px;align-items:flex-start;}
+.step-num{min-width:20px;height:20px;background:var(--border);border-radius:50%;font-size:10px;font-weight:700;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-family:'IBM Plex Mono';}
+.step-text{font-size:12.5px;color:var(--muted);line-height:1.5;}
+.step-text code{color:var(--accent);font-family:'IBM Plex Mono';font-size:11px;background:rgba(88,166,255,.08);padding:1px 5px;border-radius:3px;}
+.step-text strong{color:var(--text);}
+.install{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-top:8px;font-family:'IBM Plex Mono';font-size:12px;color:var(--green);}
+.install-label{font-size:10px;color:var(--muted);margin-bottom:6px;}
+.note{background:rgba(210,153,34,.06);border:1px solid rgba(210,153,34,.2);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--amber);margin-top:10px;}
+.screen-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:12px;}
+.screen-name{font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px;}
+.screen-components{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.comp-tag{font-size:11px;padding:2px 8px;border-radius:3px;background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.15);color:var(--accent);font-family:'IBM Plex Mono';}
+.screen-api{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono';}
+.screen-api span{color:var(--green);}
+.sum-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.sum-table th{background:var(--surface);color:var(--muted);padding:8px 12px;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.sum-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);}
+.sum-table tr:last-child td{border-bottom:none;}
+.sum-table td code{font-family:'IBM Plex Mono';font-size:11px;color:var(--accent);}
+
+/* top nav */
+.top-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.top-link{font-family:'IBM Plex Mono';font-size:11px;text-decoration:none;color:var(--muted);padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .2s ease;}
+.top-link:hover{color:var(--white);border-color:rgba(88,166,255,.45);}
+.top-link.master{color:var(--accent);border-color:rgba(88,166,255,.35);}
+.top-link.active{color:var(--white);border-color:rgba(63,185,80,.75);background:rgba(63,185,80,.16);box-shadow:0 0 0 1px rgba(63,185,80,.35) inset;font-weight:700;}
+.top-link.active::before{content:'• ';}
+
+p{font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="top-nav" aria-label="Roadmap Pages">
+    <a class="top-link master" href="Roadmap_Master.html">Master Roadmap</a>
+    <a class="top-link" href="Roadmap_Akash.html">Akash</a>
+    <a class="top-link" href="Roadmap_Abhineet.html">Abhineet</a>
+    <a class="top-link active" aria-current="page" href="Roadmap_hemant.html">Hemant</a>
+    <a class="top-link" href="Roadmap_Suryansh.html">Suryansh</a>
+  </nav>
+
+  <div class="header">
+    <div class="role-badge">Frontend Engineer</div>
+    <div class="name">hemant</div>
+    <div class="project">UCCD — Unified Customer Complaint Communication Dashboard</div>
+    <div class="meta-row">
+      <div class="meta-item">Timeline: <span>6 Weeks</span></div>
+      <div class="meta-item">Screens: <span>8 priority screens for demo</span></div>
+      <div class="meta-item">Stack: <span>React · TypeScript · Axios · Recharts · WebSocket</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Your Responsibility</div>
+    <p>You own the entire frontend. React + TypeScript app that calls Abhineet's API. You build 8 screens for the demo — the most important ones. All screens use a dark navy theme with teal accents (the design system is defined below). Week 1 you build structure and start with mock data since Abhineet's real API won't be fully ready yet.</p>
+    <p><strong style="color:var(--white)">Design system colors you must use consistently:</strong> Background: <code style="color:var(--accent)">#0A1628</code>, Cards: <code style="color:var(--accent)">#1A3356</code>, Teal accent: <code style="color:var(--accent)">#0D9488</code>, White text: <code style="color:var(--accent)">#F8FAFC</code>, Muted text: <code style="color:var(--accent)">#64748B</code>, Red alert: <code style="color:var(--accent)">#EF4444</code>, Amber warning: <code style="color:var(--accent)">#F59E0B</code>.</p>
+  </div>
+
+  <!-- WEEK 1 -->
+  <div class="section">
+    <div class="section-title">Week 1 — Project Setup + Design System + Login</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#3FB950;"></div>
+        <div class="week-num">WEEK 01</div>
+        <div class="week-title">Vite Setup + Routing + Design Tokens + Login Screen</div>
+        <div class="week-days">Days 1–7</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-component">SETUP</span>Module 1 — Project Bootstrap</div>
+          <div class="install-label">Setup commands</div>
+          <div class="install">npm create vite@latest frontend -- --template react-ts
+cd frontend
+npm install axios react-router-dom recharts
+npm install -D tailwindcss @types/node</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Create the Vite + React + TypeScript project. Set up folder structure: <code>src/pages/</code>, <code>src/components/</code>, <code>src/api/</code>, <code>src/types/</code>, <code>src/hooks/</code>.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Create <code>src/styles/tokens.css</code> — define all CSS variables: <code>--bg</code>, <code>--surface</code>, <code>--card</code>, <code>--teal</code>, <code>--white</code>, <code>--slate</code>, <code>--red</code>, <code>--amber</code>. Use these variables everywhere — never hardcode colors.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Create <code>src/api/client.ts</code> — Axios instance with <code>baseURL: "http://localhost:8000"</code> and auth header interceptor (reads JWT from localStorage).</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Create <code>src/types/complaint.ts</code> — TypeScript interfaces: <code>Complaint</code>, <code>ComplaintCreate</code>, <code>EmotionArc</code>, <code>AgentLoad</code>, <code>KpiData</code>. Match Abhineet's Swagger response shapes exactly.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Set up React Router: routes for <code>/login</code>, <code>/queue</code>, <code>/complaints/:id</code>, <code>/supervisor</code>, <code>/regulatory</code>. Protected routes that redirect to <code>/login</code> if no JWT token.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Create <code>src/components/Sidebar.tsx</code> — fixed left sidebar, 240px. Shows UCCD logo, nav items for current role. Active item has left teal border.</div></div>
+          </div>
+        </div>
+
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-screen">SCREEN 1</span>Login Page</div>
+          <p>Dark centered card. UCCD logo text in bold teal. Email + password inputs with dark fill and teal focus border. Large teal sign-in button. Role selector tabs: Agent | Supervisor | Compliance.</p>
+          <div class="screen-components">
+            <span class="comp-tag">LoginForm</span>
+            <span class="comp-tag">RoleSelector</span>
+            <span class="comp-tag">AuthContext</span>
+          </div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">On submit, call POST <code>/api/v1/auth/login</code>. For Week 1, mock this — hardcode <code>token: "fake-jwt"</code> and store in localStorage. Connect to real auth in Week 5 when Suryansh has it ready.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">After login, redirect to <code>/queue</code> for Agent role, <code>/supervisor</code> for Supervisor role.</div></div>
+          </div>
+          <div class="screen-api">API: <span>POST /api/v1/auth/login → {token, role}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 2 -->
+  <div class="section">
+    <div class="section-title">Week 2 — My Queue + Complaint Detail</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#58A6FF;"></div>
+        <div class="week-num">WEEK 02</div>
+        <div class="week-title">Agent's Two Most Used Screens</div>
+        <div class="week-days">Days 8–14</div>
+      </div>
+      <div class="week-body">
+
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-screen">SCREEN 2</span>My Queue</div>
+          <p>List of assigned complaints sorted by SLA urgency. Each row shows severity color, complaint type badge, customer name, channel icon, SLA countdown timer in red/amber/green based on time remaining.</p>
+          <div class="screen-components">
+            <span class="comp-tag">ComplaintRow</span>
+            <span class="comp-tag">SLATimer</span>
+            <span class="comp-tag">SeverityBadge</span>
+            <span class="comp-tag">FilterPills</span>
+            <span class="comp-tag">ChannelIcon</span>
+          </div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Fetch from GET <code>/api/v1/complaints?status=open&limit=50</code>. Show loading skeleton while fetching.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Build <code>SLATimer</code> component — takes <code>sla_deadline</code> ISO string, shows live countdown updating every second using <code>setInterval</code>. Color: red if under 4 hours, amber if under 12 hours, green otherwise.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Filter pills: All, At Risk (under 12h), Breached (past deadline), New Today. Clicking a pill filters the list client-side.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Each row has a View button → navigate to <code>/complaints/{id}</code>. Left border color matches severity (red=high, amber=medium, gray=normal).</div></div>
+          </div>
+          <div class="screen-api">API: <span>GET /api/v1/complaints?status=open&assigned_to={agent_id}</span></div>
+        </div>
+
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-screen">SCREEN 3</span>Complaint Detail — The Main Working Screen</div>
+          <p>Most important screen in the entire product. 3-column layout. Left: customer info + emotion arc chart + linked complaints. Middle: communication history + AI draft. Right: AI triage results + NBA panel.</p>
+          <div class="screen-components">
+            <span class="comp-tag">EmotionArcChart</span>
+            <span class="comp-tag">ConversationHistory</span>
+            <span class="comp-tag">AIDraftPanel</span>
+            <span class="comp-tag">TriagePanel</span>
+            <span class="comp-tag">NBAPanel</span>
+            <span class="comp-tag">LinkedComplaints</span>
+            <span class="comp-tag">SLACountdown</span>
+          </div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Fetch complaint from GET <code>/api/v1/complaints/{id}</code>. Show all fields.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Build <code>EmotionArcChart</code> using Recharts <code>LineChart</code>. X-axis = turn number, Y-axis = sentiment score (-1 to +1). Line color: green if positive slope, red if negative. Small sparkline size (200px × 80px).</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Build <code>ConversationHistory</code> — chat-style bubbles. Customer messages on left (dark card), agent responses on right (slightly lighter). Show timestamp + channel icon per turn.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Build <code>AIDraftPanel</code> — show <code>ai_draft_response</code> from API in a textarea that is pre-filled but editable. "Send Response" button calls POST <code>/api/v1/complaints/{id}/respond</code> with edited text.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Build <code>TriagePanel</code> (right column) — show complaint_type badge, severity_score as a 0–100 bar gauge (color: green under 40, amber 40–70, red over 70), sla_tier badge, breach_probability as percentage (red if over 70%).</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Build <code>NBAPanel</code> — hardcode 3 resolution actions for demo: "Issue Refund", "Escalate to Branch", "Close with Explanation" with fake FCR percentages. Click copies action to draft panel.</div></div>
+            <div class="step"><div class="step-num">7</div><div class="step-text">Top header bar: complaint ID + type badge + SLA countdown + status badge + Escalate button (red outline) + Resolve button (teal filled).</div></div>
+            <div class="step"><div class="step-num">8</div><div class="step-text">Add <code>LanguageBadge</code> near customer name using source_language from API (example: any detected language like Hindi, Tamil, Bengali, Marathi, Urdu, English, or non-Indian languages).</div></div>
+            <div class="step"><div class="step-num">9</div><div class="step-text">Sarvam — Show original toggle: add <code>OriginalTextToggle</code> to switch between translated English text and original language text in conversation history.</div></div>
+            <div class="step"><div class="step-num">10</div><div class="step-text">For <code>TranslationPreview</code>, call GET <code>/api/v1/ai/translate-preview?text=...&target=...</code> only when typing pauses for 1 second (debounce 1000ms), not on every keystroke.</div></div>
+          </div>
+          <div class="screen-api">API: <span>GET /complaints/{id} · GET /complaints/{id}/history · GET /ai/draft/{id} · POST /complaints/{id}/respond</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 3 -->
+  <div class="section">
+    <div class="section-title">Week 3 — Supervisor Command Centre</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#D29922;"></div>
+        <div class="week-num">WEEK 03</div>
+        <div class="week-title">Live Operations Dashboard</div>
+        <div class="week-days">Days 15–21</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-screen">SCREEN 4</span>Supervisor Command Centre</div>
+          <p>Full-width no sidebar. Live KPI bar across top. Left 60%: escalation queue table. Right 40%: agent load bars + AI intelligence feed. Volume bar chart at bottom.</p>
+          <div class="screen-components">
+            <span class="comp-tag">KPIBar</span>
+            <span class="comp-tag">EscalationQueue</span>
+            <span class="comp-tag">AgentLoadBars</span>
+            <span class="comp-tag">AIFeed</span>
+            <span class="comp-tag">VolumeChart</span>
+            <span class="comp-tag">LiveDot</span>
+          </div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">KPI bar: 5 stat cards side by side — Open Complaints (white), Breached (red), AI Predicted (amber), FCR Rate (green), Avg Handle Time (teal). Fetch from GET <code>/api/v1/kpis</code>. Poll every 30 seconds.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Escalation Queue table — fetch from GET <code>/api/v1/escalations</code>. Columns: Priority badge (BREACH red pill / PREDICT amber pill), Complaint ID, Customer, Type, Time Remaining (red countdown), Agent. Sort by urgency. Refresh every 30 seconds.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Agent Load Bars — fetch from GET <code>/api/v1/agents/load</code>. For each agent: name + avatar initials + horizontal progress bar 0–100%. Bar color: green under 60, amber 60–80, red over 80. Show queue count number. Poll every 15 seconds.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">AI Intelligence Feed — hardcode 3 feed items for demo with different dot colors (red=spike, amber=burnout, teal=opportunity). In Week 5, connect to WebSocket for real-time updates.</div></div>
+            <div class="step"><div class="step-num">5</div><div class="step-text">Volume Chart — Recharts <code>BarChart</code> showing complaint count per hour for last 12 hours. Fetch from GET <code>/api/v1/analytics/trends?window=12h</code>. Bars in teal.</div></div>
+            <div class="step"><div class="step-num">6</div><div class="step-text">Green pulsing "LIVE" dot in header — CSS animation <code>@keyframes pulse</code>, opacity 1→0.3→1, 1.5s infinite.</div></div>
+          </div>
+          <div class="screen-api">API: <span>GET /kpis · GET /escalations · GET /agents/load · GET /analytics/trends</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 4 -->
+  <div class="section">
+    <div class="section-title">Week 4 — Regulatory View + Insights Board</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#F85149;"></div>
+        <div class="week-num">WEEK 04</div>
+        <div class="week-title">Compliance Dashboard + Analytics Trends</div>
+        <div class="week-days">Days 22–28</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-screen">SCREEN 5</span>Regulatory Dashboard</div>
+          <p>All open regulatory complaints with live countdown timers. Red alert bar if any deadline within 24 hours. Each complaint card shows regulator body badge, large deadline countdown, and Submit Report button.</p>
+          <div class="screen-components">
+            <span class="comp-tag">RegComplaintCard</span>
+            <span class="comp-tag">DeadlineCountdown</span>
+            <span class="comp-tag">RegulatorBadge</span>
+            <span class="comp-tag">AlertBanner</span>
+          </div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Fetch from GET <code>/api/v1/complaints?regulatory_flag=true&status=open</code>. Sort by <code>regulatory_deadline</code> ascending (most urgent first).</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Red alert banner at page top if any complaint has <code>regulatory_deadline</code> within 24 hours from now. Text: "WARNING: {count} regulatory complaints expire within 24 hours".</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Each card: regulator badge (RBI = red, BANKING OMBUDSMAN = dark red, IBA = amber), large countdown timer in big font, customer name, complaint type, status, View Details button.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Cards with less than 5 hours remaining have a pulsing red border using CSS animation.</div></div>
+          </div>
+          <div class="screen-api">API: <span>GET /complaints?regulatory_flag=true&status=open</span></div>
+        </div>
+
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-screen">SCREEN 6</span>Insights — Trend Dashboard</div>
+          <p>Complaint volume trends over time. Multi-line chart by complaint type. Day-of-week heatmap. Top complaint drivers table.</p>
+          <div class="screen-components">
+            <span class="comp-tag">TrendLineChart</span>
+            <span class="comp-tag">HeatmapGrid</span>
+            <span class="comp-tag">DriversTable</span>
+            <span class="comp-tag">DateRangePicker</span>
+          </div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Fetch from GET <code>/api/v1/analytics/trends?window=30d</code>. Response: array of {date, type, count} items.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Build multi-line Recharts <code>LineChart</code> — one line per complaint type (Billing=blue, Fraud=red, KYC=purple, Loans=amber, Cards=green). X-axis: dates. Legend top right.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Heatmap grid: 7 rows (Mon–Sun) × 24 columns (hours). Each cell is a small div, background-color from transparent to <code>#0D9488</code> based on complaint volume. Show placeholder mock data for demo if API not ready.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Top drivers table: complaint_type, volume this month, change vs last month (green/red arrow), FCR rate. Fetch from same analytics endpoint.</div></div>
+          </div>
+          <div class="screen-api">API: <span>GET /analytics/trends?window=30d</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 5 -->
+  <div class="section">
+    <div class="section-title">Week 5 — WebSocket + Simulation Sandbox + Auth</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#BC8CFF;"></div>
+        <div class="week-num">WEEK 05</div>
+        <div class="week-title">Real-Time Updates + What-If Sandbox + Connect Real Auth</div>
+        <div class="week-days">Days 29–35</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-ws">WEBSOCKET</span>Module — Real-Time Supervisor Feed</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Write <code>src/hooks/useWebSocket.ts</code> — custom hook that connects to <code>ws://localhost:8000/api/v1/ws/supervisor</code>, handles reconnect on disconnect, exposes <code>messages</code> array and <code>lastMessage</code>.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">In Supervisor Command Centre, use this hook. When a <code>breach_predicted</code> message arrives, add it to the escalation queue with amber PREDICT badge and show a toast notification.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">When <code>cluster_spike</code> message arrives, add to AI Intelligence Feed with red dot. When <code>agent_overload</code> arrives, highlight the agent's load bar in red and show alert.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Build <code>Toast</code> component — slides in from top right, shows for 5 seconds, then auto-dismisses. Color matches message type.</div></div>
+          </div>
+        </div>
+
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-screen">SCREEN 7</span>Simulation Sandbox</div>
+          <p>Left: condition builder form + resolution action + Run button. Right: results panel showing how many complaints resolve, CSAT delta, cost saving.</p>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Condition builder: 3 dropdowns per row — Field (complaint_type/product/channel), Operator (=/>/contains), Value (free text). Add Row and Remove Row buttons. Build condition string from rows.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Resolution Action dropdown: Issue Refund / Close with Apology / Auto-Resolve / Extend Deadline.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Run Simulation button → POST <code>/api/v1/simulation/run</code>. Show loading spinner. Display results: complaints_resolved (large green number), csat_delta (+X.XX), cost_saving (₹X Lakh).</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Add disclaimer in amber italic: "Estimates based on historical patterns. Actual results may vary."</div></div>
+          </div>
+          <div class="screen-api">API: <span>POST /simulation/run → {complaints_resolved, csat_delta, cost_saving}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 6 -->
+  <div class="section">
+    <div class="section-title">Week 6 — Polish + Demo Prep + Screen 8</div>
+    <div class="week">
+      <div class="week-header">
+        <div class="week-dot" style="background:#3FB950;"></div>
+        <div class="week-num">WEEK 06</div>
+        <div class="week-title">Search Screen + Polish + End-to-End Demo Flow</div>
+        <div class="week-days">Days 36–42</div>
+      </div>
+      <div class="week-body">
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-screen">SCREEN 8</span>Complaint Search</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Large search bar at top. Filter dropdowns: Status, Type, Channel, Date Range. Results table with sortable columns.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">On search: GET <code>/api/v1/complaints?search={query}&status={x}&type={y}</code>. Show results table. Pagination: show 20 per page.</div></div>
+          </div>
+        </div>
+
+        <div class="module">
+          <div class="module-name"><span class="module-badge mb-component">POLISH</span>Final Polish Tasks</div>
+          <div class="steps">
+            <div class="step"><div class="step-num">1</div><div class="step-text">Add loading skeletons to every screen — gray animated placeholder bars while data is fetching. Never show a blank screen.</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-text">Add empty states — when a list has 0 items, show a centered message with an icon. E.g. "No escalations right now ✓" for empty escalation queue.</div></div>
+            <div class="step"><div class="step-num">3</div><div class="step-text">Test all screens at 1280×800 screen size — this is what the demo will likely be recorded at.</div></div>
+            <div class="step"><div class="step-num">4</div><div class="step-text">Practice the demo flow: Login → My Queue → open complaint → see emotion arc + AI draft → go to Supervisor HQ → see escalation queue → trigger simulation → show regulatory dashboard.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="section">
+    <div class="section-title">Your 8 Screens Summary</div>
+    <table class="sum-table">
+      <thead><tr><th>#</th><th>Screen</th><th>Key Components</th><th>Week</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Login</td><td>LoginForm, RoleSelector</td><td>Week 1</td></tr>
+        <tr><td>2</td><td>My Queue</td><td>ComplaintRow, SLATimer, FilterPills</td><td>Week 2</td></tr>
+        <tr><td>3</td><td>Complaint Detail</td><td>EmotionArcChart, AIDraftPanel, TriagePanel, LanguageBadge, OriginalTextToggle, TranslationPreview</td><td>Week 2</td></tr>
+        <tr><td>4</td><td>Supervisor Command Centre</td><td>KPIBar, EscalationQueue, AgentLoadBars</td><td>Week 3</td></tr>
+        <tr><td>5</td><td>Regulatory Dashboard</td><td>DeadlineCountdown, AlertBanner</td><td>Week 4</td></tr>
+        <tr><td>6</td><td>Insights Trend Dashboard</td><td>TrendLineChart, HeatmapGrid</td><td>Week 4</td></tr>
+        <tr><td>7</td><td>Simulation Sandbox</td><td>ConditionBuilder, ResultsPanel</td><td>Week 5</td></tr>
+        <tr><td>8</td><td>Complaint Search</td><td>SearchBar, FiltersRow, ResultsTable</td><td>Week 6</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Git Workflow</div>
+    <div class="install-label">Branch name</div>
+    <div class="install" style="color:var(--green)">git checkout -b feature/hemant-frontend</div>
+    <div style="margin-top:12px;">
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-text">Your folder: <code>frontend/</code> — everything inside here is yours. Never touch anything outside this folder.</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-text">Use mock data for Week 1–2 while Abhineet's API is being built. Once he shares Swagger docs (Day 5 of Week 1), update your types and API calls.</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-text">If an API endpoint doesn't exist yet — mock it locally in <code>src/api/mocks.ts</code> and replace with real call when it's ready.</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
