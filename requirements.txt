@@ -10,3 +10,4 @@ psycopg2-binary
 dotenv
 groq
 langgraph
+apscheduler

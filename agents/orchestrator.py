@@ -5,6 +5,7 @@ from api.db.session import get_db
 from api.models.complaint import Complaint
 from datetime import datetime, timezone, timedelta
 from agents.root_cause_agent import run_root_cause
+from services.sla_service import set_sla_timer
 
 
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -63,6 +64,9 @@ def merge_and_save(state:ComplaintState) -> dict:
     complaint.updated_at = datetime.now(IST)
 
     db.commit()
+
+    if complaint.sla_tier:
+        set_sla_timer(complaint.id, complaint.sla_tier)
     return {}
 
 
