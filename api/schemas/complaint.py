@@ -55,3 +55,6 @@ class ComplaintListResponse(BaseModel):
     total: int
     page: int
     limit: int
+
+class StatusUpdate(BaseModel):
+    new_status: str

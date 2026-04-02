@@ -1,10 +1,11 @@
 from fastapi import APIRouter,Query,HTTPException,Depends,BackgroundTasks
 from uuid import uuid4
 from datetime import datetime, timedelta, timezone
-from api.schemas.complaint import ComplaintCreate, ComplaintResponse, ComplaintListResponse
+from api.schemas.complaint import ComplaintCreate, ComplaintResponse, ComplaintListResponse, StatusUpdate
 from agents.nlp_classifier import classify_complaint
 from api.db.session import get_db
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session 
+from sqlalchemy import or_
 from api.models.complaint import Complaint
 from agents.orchestrator import run_pipeline
 
@@ -81,3 +82,48 @@ def get_complaint(complaint_id: str, db: Session = Depends(get_db)):
     if not complaint:
         raise HTTPException(status_code=404, detail="Complaint not found")
     return complaint
+
+
+VALID_TRANSITIONS = {
+    "queued": ["new", "escalated"],
+    "new": ["in_progress", "escalated"],
+    "in_progress": ["resolved", "escalated"],
+    "resolved": [],
+    "escalated": []
+    }
+
+@router.put("/{complaint_id}/status",response_model=ComplaintResponse)
+def update_complaint_status(complaint_id:str, body: StatusUpdate, db: Session = Depends(get_db)):
+    
+    complaint = db.query(Complaint).filter(Complaint.id == complaint_id).first()
+    if complaint is None:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    if body.new_status not in VALID_TRANSITIONS.get(complaint.status, []):
+        raise HTTPException(status_code=422, detail=f"Invalid status transition from {complaint.status} to {body.new_status}")
+
+    complaint.status = body.new_status
+    db.commit()
+    db.refresh(complaint)
+    return complaint
+
+@router.get("/escalations",response_model=ComplaintListResponse)
+def list_escalated_complaints(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Number of complaints per page"),
+    db: Session = Depends(get_db)
+):
+    filtered_complaints = db.query(Complaint).filter(
+    or_(
+        Complaint.status == "escalated",
+        (Complaint.breach_probability > 0.70) & (Complaint.status != "resolved")
+    ).order_by(Complaint.breach_probability.desc())
+)
+
+    start = (page - 1) * limit
+    return {
+        "total": filtered_complaints.count(),
+        "page": page,
+        "limit": limit,
+        "complaints": filtered_complaints.offset(start).limit(limit).all(),
+    }
