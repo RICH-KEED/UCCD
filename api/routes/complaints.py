@@ -68,7 +68,27 @@ def list_complaints(
         filtered_complaints = filtered_complaints.filter(Complaint.channel == channel)
 
     start = (page - 1) * limit
-    end = start + limit
+    return {
+        "total": filtered_complaints.count(),
+        "page": page,
+        "limit": limit,
+        "complaints": filtered_complaints.offset(start).limit(limit).all(),
+    }
+
+@router.get("/escalations",response_model=ComplaintListResponse)
+def list_escalated_complaints(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Number of complaints per page"),
+    db: Session = Depends(get_db)
+):
+    filtered_complaints = db.query(Complaint).filter(
+    or_(
+        Complaint.status == "escalated",
+        (Complaint.breach_probability > 0.70) & (Complaint.status != "resolved")
+    )
+).order_by(Complaint.breach_probability.desc()) 
+
+    start = (page - 1) * limit
     return {
         "total": filtered_complaints.count(),
         "page": page,
@@ -82,7 +102,6 @@ def get_complaint(complaint_id: str, db: Session = Depends(get_db)):
     if not complaint:
         raise HTTPException(status_code=404, detail="Complaint not found")
     return complaint
-
 
 VALID_TRANSITIONS = {
     "queued": ["new", "escalated"],
@@ -107,23 +126,3 @@ def update_complaint_status(complaint_id:str, body: StatusUpdate, db: Session = 
     db.refresh(complaint)
     return complaint
 
-@router.get("/escalations",response_model=ComplaintListResponse)
-def list_escalated_complaints(
-    page: int = Query(1, ge=1, description="Page number"),
-    limit: int = Query(20, ge=1, le=100, description="Number of complaints per page"),
-    db: Session = Depends(get_db)
-):
-    filtered_complaints = db.query(Complaint).filter(
-    or_(
-        Complaint.status == "escalated",
-        (Complaint.breach_probability > 0.70) & (Complaint.status != "resolved")
-    ).order_by(Complaint.breach_probability.desc())
-)
-
-    start = (page - 1) * limit
-    return {
-        "total": filtered_complaints.count(),
-        "page": page,
-        "limit": limit,
-        "complaints": filtered_complaints.offset(start).limit(limit).all(),
-    }
