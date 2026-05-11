@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes.complaints import router as complaints_router
+from api.routes.auth import router as auth_router
+from api.routes.dashboard import router as dashboard_router
 from apscheduler.schedulers.background import BackgroundScheduler
 from services.sla_service import check_all_sla
 from contextlib import asynccontextmanager
@@ -28,6 +30,8 @@ app.add_middleware(
 )
 
 app.include_router(complaints_router)
+app.include_router(auth_router)
+app.include_router(dashboard_router)
 app.include_router(ws_router,prefix="/api/v1")
 
 @app.get("/api/health")

@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from api.models.complaint import Complaint
 from agents.orchestrator import run_pipeline
+from services.sla_service import get_sla_status
+from api.websocket import broadcast_event
 
 router = APIRouter(prefix="/api/v1/complaints", tags=["complaints"])
 
@@ -39,6 +41,17 @@ def create_complaint(complaint: ComplaintCreate,background_tasks: BackgroundTask
     db.commit()
     db.refresh(db_complaint)
 
+    background_tasks.add_task(
+        broadcast_event,
+        {
+            "type": "complaint_created",
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "complaint_id": str(db_complaint.id),
+            "status": db_complaint.status,
+            "channel": db_complaint.channel,
+            "customer_id": db_complaint.customer_id,
+        },
+    )
 
     background_tasks.add_task(
         run_pipeline,
@@ -103,6 +116,13 @@ def get_complaint(complaint_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Complaint not found")
     return complaint
 
+@router.get("/{complaint_id}/sla")
+def get_complaint_sla(complaint_id: str):
+    status = get_sla_status(complaint_id)
+    if status is None:
+        raise HTTPException(status_code=404, detail="SLA not set for this complaint")
+    return status
+
 VALID_TRANSITIONS = {
     "queued": ["new", "escalated"],
     "new": ["in_progress", "escalated"],
@@ -121,8 +141,18 @@ def update_complaint_status(complaint_id:str, body: StatusUpdate, db: Session = 
     if body.new_status not in VALID_TRANSITIONS.get(complaint.status, []):
         raise HTTPException(status_code=422, detail=f"Invalid status transition from {complaint.status} to {body.new_status}")
 
+    old_status = complaint.status
     complaint.status = body.new_status
     db.commit()
     db.refresh(complaint)
+    broadcast_event(
+        {
+            "type": "complaint_status_changed",
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "complaint_id": str(complaint.id),
+            "from": old_status,
+            "to": complaint.status,
+        }
+    )
     return complaint
 

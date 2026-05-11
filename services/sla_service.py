@@ -3,9 +3,11 @@ import os
 from datetime import datetime, timedelta,timezone
 from api.websocket import manager
 import asyncio
+from api.db.session import get_db
+from api.models.complaint import Complaint
 
 
-REDIS_URL = os.getenv('REDIS_URL')
+REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
 r = redis.from_url(REDIS_URL, decode_responses=True)
 
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -59,12 +61,17 @@ def get_sla_status(complaint_id: str):
 
 
 def fire_sla_alert(complaint_id: str, alert_type: str):
-    loop = asyncio.get_event_loop()
-    loop.create_task(manager.broadcast({
+    payload = {
         "type": "sla_alert",
         "alert_type": alert_type,
-        "complaint_id": complaint_id
-    }))
+        "complaint_id": complaint_id,
+        "ts": datetime.now(IST).isoformat(),
+    }
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(manager.broadcast(payload))
+    except RuntimeError:
+        asyncio.run(manager.broadcast(payload))
 
 
 def clear_sla(complaint_id: str):
@@ -96,4 +103,15 @@ def check_all_sla():
         ttl = r.ttl(f"sla:{complaint_id}")
         if ttl == -2:
             fire_sla_alert(complaint_id, "BREACHED")
+            try:
+                db = next(get_db())
+                complaint = db.query(Complaint).filter(Complaint.id == complaint_id).first()
+                if complaint is not None:
+                    complaint.sla_breached = True
+                    if complaint.status != "resolved":
+                        complaint.status = "escalated"
+                    db.commit()
+            except Exception:
+                # If DB is not configured/reachable, still keep redis+ws behavior.
+                pass
             clear_sla(complaint_id)

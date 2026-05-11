@@ -1,5 +1,7 @@
 from fastapi import WebSocket, APIRouter , WebSocketDisconnect
 from typing import Set
+from datetime import datetime, timezone
+import asyncio
 
 router = APIRouter()
 
@@ -20,9 +22,27 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+def broadcast_event(message: dict):
+    """
+    Allow sync contexts (routes, schedulers) to broadcast.
+    """
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(manager.broadcast(message))
+    except RuntimeError:
+        asyncio.run(manager.broadcast(message))
+
 @router.websocket("/ws/supervisor")
 async def supervisor_ws(websocket: WebSocket):
     await manager.connect(websocket)
+    await websocket.send_json(
+        {
+            "type": "connected",
+            "channel": "supervisor",
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "active_connections": len(manager.active_connections),
+        }
+    )
     try:
         while True:
             data = await websocket.receive_text()
