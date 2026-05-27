@@ -19,6 +19,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from services.sla_service import check_all_sla
 from services.regulatory_service import check_all_regulatory
 from contextlib import asynccontextmanager
+from api.config import get_settings
 from api.websocket import router as ws_router, manager
 
 logger = logging.getLogger("uccd.request")
@@ -63,7 +64,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Customer Complaint Management API", version="1.0", lifespan=lifespan)
 
-allow_origins = ["http://localhost:5173", "http://localhost:3000"]
+settings = get_settings()
 
 @app.middleware("http")
 async def request_logging_middleware(request: Request, call_next):
@@ -84,7 +85,8 @@ async def request_logging_middleware(request: Request, call_next):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allow_origins,
+    allow_origins=settings.cors_allowed_origins,
+    allow_origin_regex=settings.cors_allowed_origin_regex,
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=True,

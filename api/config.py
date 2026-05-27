@@ -1,11 +1,31 @@
 from functools import lru_cache
 import os
-from typing import Optional
+from typing import List, Optional
 
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 load_dotenv()
+
+
+DEFAULT_CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
+
+
+def _parse_csv_env(name: str, default: List[str]) -> List[str]:
+    value = os.getenv(name)
+    if not value:
+        return default.copy()
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def _parse_optional_env(name: str) -> Optional[str]:
+    value = os.getenv(name)
+    if not value or not value.strip():
+        return None
+    return value.strip()
 
 
 class EmailSettings(BaseModel):
@@ -57,6 +77,8 @@ class Settings(BaseModel):
     jwt_secret: str
     jwt_alg: str = "HS256"
     jwt_expires_minutes: int = 720
+    cors_allowed_origins: List[str] = Field(default_factory=lambda: DEFAULT_CORS_ALLOWED_ORIGINS.copy())
+    cors_allowed_origin_regex: Optional[str] = None
     groq_api_key: Optional[str] = None
     sarvam_access_token: Optional[str] = None
     telegram_bot_token: Optional[str] = None
@@ -84,6 +106,8 @@ class Settings(BaseModel):
             jwt_secret=jwt_secret,
             jwt_alg=os.getenv("JWT_ALG", "HS256"),
             jwt_expires_minutes=int(os.getenv("JWT_EXPIRES_MINUTES", "720")),
+            cors_allowed_origins=_parse_csv_env("CORS_ALLOWED_ORIGINS", DEFAULT_CORS_ALLOWED_ORIGINS),
+            cors_allowed_origin_regex=_parse_optional_env("CORS_ALLOWED_ORIGIN_REGEX"),
             groq_api_key=os.getenv("GROQ_API_KEY"),
             sarvam_access_token=os.getenv("SARVAM_ACCESS_TOKEN"),
             telegram_bot_token=os.getenv("TELEGRAM_BOT_TOKEN"),

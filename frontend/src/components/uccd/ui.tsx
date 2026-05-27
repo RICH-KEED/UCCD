@@ -27,7 +27,7 @@ export function PrimaryButton({
     <button
       type="button"
       onClick={onClick}
-      className={`uccd-glow inline-flex h-10 cursor-pointer items-center justify-center rounded-full bg-accent px-4 text-sm font-medium text-black transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${className}`}
+      className={`uccd-glow inline-flex h-10 cursor-pointer items-center justify-center rounded-full bg-accent px-4 text-sm font-medium text-accent-foreground transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${className}`}
     >
       {children}
     </button>

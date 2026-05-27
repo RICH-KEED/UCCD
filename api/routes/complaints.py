@@ -109,6 +109,7 @@ def list_complaints(
     regulatory_flag: Optional[bool] = Query(None, description="Filter by regulatory flag"),
     priority_tier: Optional[int] = Query(None, ge=1, le=5, description="Filter by priority tier"),
     sla_tier: Optional[str] = Query(None, description="Filter by SLA tier"),
+    customer_id: Optional[str] = Query(None, min_length=1, description="Filter by customer ID"),
     search: Optional[str] = Query(None, min_length=1, description="Search customer, text, type, intent, product, or cluster"),
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(20, ge=1, le=100, description="Number of complaints per page"),
@@ -127,6 +128,8 @@ def list_complaints(
         filtered_complaints = filtered_complaints.filter(Complaint.priority_tier == priority_tier)
     if sla_tier:
         filtered_complaints = filtered_complaints.filter(Complaint.sla_tier == sla_tier)
+    if customer_id:
+        filtered_complaints = filtered_complaints.filter(Complaint.customer_id == customer_id.strip())
     if search:
         term = f"%{search.strip()}%"
         filtered_complaints = filtered_complaints.filter(
@@ -137,6 +140,11 @@ def list_complaints(
                 Complaint.intent.ilike(term),
                 Complaint.product_code.ilike(term),
                 Complaint.cluster_id.ilike(term),
+                Complaint.customer_name.ilike(term),
+                Complaint.customer_email.ilike(term),
+                Complaint.customer_phone.ilike(term),
+                Complaint.account_number.ilike(term),
+                Complaint.source_ref.ilike(term),
             )
         )
 

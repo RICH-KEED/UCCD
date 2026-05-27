@@ -278,7 +278,7 @@ export function ResolutionFlow() {
                     type="button"
                     onClick={() => setSpeedIndex(index)}
                     className={`cursor-pointer rounded-full px-3 py-1 text-xs transition ${
-                      speedIndex === index ? 'bg-accent text-black' : 'text-muted hover:text-text'
+                      speedIndex === index ? 'bg-accent text-accent-foreground' : 'text-muted hover:text-text'
                     }`}
                   >
                     {label}
@@ -296,7 +296,7 @@ export function ResolutionFlow() {
                     }}
                     className={`cursor-pointer rounded-full border px-3 py-1 text-xs transition ${
                       activeSeed === index
-                        ? 'border-accent bg-accent text-black'
+                        ? 'border-accent bg-accent text-accent-foreground'
                         : 'border-border bg-surface text-muted hover:text-text'
                     }`}
                   >
@@ -318,7 +318,7 @@ export function ResolutionFlow() {
                     key={i}
                     className={`absolute top-5 h-0.5 ${
                       isActive
-                        ? 'bg-accent shadow-[0_0_12px_rgba(0,255,178,0.6)]'
+                        ? 'uccd-accent-line bg-accent'
                         : 'bg-border'
                     }`}
                     style={{
@@ -353,7 +353,7 @@ export function ResolutionFlow() {
                           completed
                             ? 'border-accent/40 bg-accent/10 text-accent'
                             : isActive
-                              ? 'border-accent bg-accent/10 text-accent shadow-[0_0_18px_rgba(0,255,178,0.25)]'
+                              ? 'border-accent bg-accent/10 text-accent uccd-accent-dot'
                               : 'border-border bg-bg text-muted'
                         }`}
                       >
@@ -368,7 +368,7 @@ export function ResolutionFlow() {
               })}
 
               <motion.div
-                className="absolute top-[4.25rem] z-20 w-[180px] -translate-x-1/2 rounded-full border border-accent/40 bg-bg px-4 py-2 shadow-[0_0_34px_rgba(0,255,178,0.25)]"
+                className="uccd-accent-panel absolute top-[4.25rem] z-20 w-[180px] -translate-x-1/2 rounded-full border border-accent/40 bg-bg px-4 py-2"
                 initial={false}
                 animate={{ left: stageLeft[activeStep] }}
                 transition={{ duration: 0.48, ease: [0.22, 1, 0.36, 1] }}
@@ -396,7 +396,7 @@ export function ResolutionFlow() {
               <h3 className="mt-2 text-2xl font-medium text-text">{activePayload.title}</h3>
 
               <div className={activeStep === 2 ? 'mt-5 grid gap-3 md:grid-cols-2' : 'mt-5 grid gap-3'}>
-                {activePayload.rows.map(([label, value], rowIdx) => {
+                {(activePayload.rows as readonly (readonly [string, string])[]).map(([label, value], rowIdx) => {
                   const RowIcon = rowIconsByStage[activeStep](label)
                   return (
                     <motion.div

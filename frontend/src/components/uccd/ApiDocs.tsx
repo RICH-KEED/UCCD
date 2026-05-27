@@ -155,7 +155,7 @@ export function ApiDocs() {
                   }}
                   className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs transition ${
                     activeGroup === group
-                      ? 'border-accent bg-accent text-black'
+                      ? 'border-accent bg-accent text-accent-foreground'
                       : 'border-border text-muted hover:text-text'
                   }`}
                 >

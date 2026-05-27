@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useRouter } from '@/hooks/use-router'
 import { Container, PrimaryButton, StarRating } from './ui'
 
 function DashboardPreview() {
@@ -21,7 +22,7 @@ function DashboardPreview() {
               transition={{ duration: 3, repeat: Infinity, delay: channel.length * 0.04 }}
             >
               <span className="text-sm text-text">{channel}</span>
-              <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_18px_rgba(0,255,178,0.8)]" />
+              <span className="uccd-accent-dot h-2 w-2 rounded-full bg-accent" />
             </motion.div>
           ))}
         </div>
@@ -61,6 +62,8 @@ function DashboardPreview() {
 }
 
 export function Hero() {
+  const { navigate } = useRouter()
+
   return (
     <section className="uccd-hero-glow relative overflow-hidden pt-32 pb-12">
       <Container className="flex flex-col items-center gap-12">
@@ -78,9 +81,7 @@ export function Hero() {
             UCCD brings email, social, voice, chat, portal, and regulator
             complaints into one AI-assisted resolution workflow.
           </p>
-          <a href="#workflow">
-            <PrimaryButton>See the workflow</PrimaryButton>
-          </a>
+          <PrimaryButton onClick={() => navigate('login')}>See the workflow</PrimaryButton>
           <div className="flex flex-col items-center gap-2">
             <p className="text-sm text-muted">Built for regulated service teams</p>
             <StarRating />
@@ -89,8 +90,8 @@ export function Hero() {
 
         <div className="relative w-full max-w-[1184px]">
           <div className="pointer-events-none absolute -top-24 left-1/2 h-[398px] w-[90%] -translate-x-1/2 rounded-full bg-accent/10 blur-3xl" />
-          <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-[0_0_80px_rgba(0,255,178,0.08)]">
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+          <div className="uccd-preview-shadow relative overflow-hidden rounded-2xl border border-border">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
             <DashboardPreview />
           </div>
         </div>

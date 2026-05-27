@@ -99,7 +99,7 @@ export function AgentTriage() {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-sm text-text">{label}</span>
-                    <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_14px_rgba(0,255,178,0.75)]" />
+                    <span className="uccd-accent-dot h-2 w-2 rounded-full bg-accent" />
                   </div>
                   <p className="mt-2 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs text-accent">
                     {value}

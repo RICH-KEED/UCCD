@@ -62,7 +62,7 @@ export function Intro() {
                 {timeline.map(([time, event]) => (
                   <div key={time} className="flex gap-3">
                     <span className="w-10 shrink-0 font-mono text-xs text-accent">{time}</span>
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-accent shadow-[0_0_14px_rgba(0,255,178,0.7)] mt-1.5" />
+                    <span className="uccd-accent-dot h-2 w-2 shrink-0 rounded-full bg-accent mt-1.5" />
                     <p className="text-sm text-muted">{event}</p>
                   </div>
                 ))}
