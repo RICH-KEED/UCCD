@@ -132,25 +132,36 @@ export function Trends() {
   const [error, setError] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState('All')
   const [activeView, setActiveView] = useState('Charts')
+  
+  // SLA compliance data
+  const [slaCompliance, setSlaCompliance] = useState<{ met: number; breached: number; complianceRate: number } | null>(null)
 
   const filterOptions = ['All', 'UPI', 'Cards', 'NetBanking', 'Loans', 'Critical', 'Negative', 'Premium']
   const viewOptions = ['Charts', 'Heatmaps', 'Tables', 'Forecast']
 
-  useEffect(() => {
-    setLoading(true)
-    setError(null)
-    const days = dateRange === 'Last 24h' ? 1 : dateRange === 'Last 30d' ? 30 : 7
-    api.getTrends(days)
-      .then((res) => {
-        setData(res.daily_volume)
-        const cats: CategoryEntry[] = Object.entries(res.category_distribution)
-          .map(([name, count]) => ({ name, count }))
-          .sort((a, b) => b.count - a.count)
-        setCategories(cats)
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load trends'))
-      .finally(() => setLoading(false))
-  }, [dateRange])
+   useEffect(() => {
+     setLoading(true)
+     setError(null)
+     const days = dateRange === 'Last 24h' ? 1 : dateRange === 'Last 30d' ? 30 : 7
+     api.getTrends(days)
+       .then((res) => {
+         setData(res.daily_volume)
+         const cats: CategoryEntry[] = Object.entries(res.category_distribution)
+           .map(([name, count]) => ({ name, count }))
+           .sort((a, b) => b.count - a.count)
+         setCategories(cats)
+         // Store SLA compliance data
+         if (res.sla_compliance) {
+           setSlaCompliance({
+             met: res.sla_compliance.met,
+             breached: res.sla_compliance.breached,
+             complianceRate: res.sla_compliance.compliance_rate
+           })
+         }
+       })
+       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load trends'))
+       .finally(() => setLoading(false))
+   }, [dateRange])
 
   const totalComplaints = data.reduce((sum, d) => sum + d.count, 0)
 
@@ -252,23 +263,28 @@ export function Trends() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)', gap: 20, alignItems: 'start' }}>
-            <div style={{ background: 'white', borderRadius: 16, padding: 20, boxShadow: '0 2px 10px rgba(0,0,0,.03)' }}>
-              <h3 style={{ margin: '0 0 16px 0', fontSize: 14, fontWeight: 700, color: '#111827' }}>Category Trends</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {categories.slice(0, 6).map((cat, _i) => {
-                  const maxCount = categories[0]?.count ?? 1
-                  const pct = Math.round((cat.count / maxCount) * 100)
-                  const colors = ['#DC2626', '#EA580C', '#3B82F6', '#16A34A', '#8B5CF6', '#F59E0B']
-                  return (
-                    <div key={cat.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <Sparkline growth={trendGrowth > 0 ? trendGrowth - _i * 5 : trendGrowth} />
-                      <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#1F2937' }}>{cat.name}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: colors[_i % colors.length] }}>{pct}%</span>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
+             <div style={{ background: 'white', borderRadius: 16, padding: 20, boxShadow: '0 2px 10px rgba(0,0,0,.03)' }}>
+               <h3 style={{ margin: '0 0 16px 0', fontSize: 14, fontWeight: 700, color: '#111827' }}>Category Trends</h3>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                 {categories.slice(0, 6).map((cat, _i) => {
+                   const maxCount = categories[0]?.count ?? 1
+                   const pct = Math.round((cat.count / maxCount) * 100)
+                   const colors = ['#DC2626', '#EA580C', '#3B82F6', '#16A34A', '#8B5CF6', '#F59E0B']
+                   return (
+                     <div key={cat.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                       <Sparkline growth={trendGrowth > 0 ? trendGrowth - _i * 5 : trendGrowth} />
+                       <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#1F2937' }}>{cat.name}</span>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                         <span style={{ fontSize: 13, fontWeight: 700, color: colors[_i % colors.length] }}>{pct}%</span>
+                         <div style={{ height: 4, width: 80, background: '#F3F4F6', borderRadius: 2, overflow: 'hidden' }}>
+                           <div style={{ height: '100%', width: `${pct}%`, background: colors[_i % colors.length], borderRadius: 2 }} />
+                         </div>
+                       </div>
+                     </div>
+                   )
+                 })}
+               </div>
+             </div>
 
             <div style={{ background: 'white', borderRadius: 16, padding: 20, boxShadow: '0 2px 10px rgba(0,0,0,.03)' }}>
               <h3 style={{ margin: '0 0 16px 0', fontSize: 14, fontWeight: 700, color: '#111827' }}>Channel Trends</h3>
@@ -309,13 +325,29 @@ export function Trends() {
                 <h3 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827' }}>Trend Intelligence</h3>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '.3px', marginBottom: 4 }}>Emerging Pattern</div>
-                  <p style={{ margin: 0, fontSize: 11, color: '#4B5563', lineHeight: 1.5 }}>
-                    Volume trend: <strong style={{ color: trendGrowth > 0 ? '#DC2626' : '#16A34A' }}>{trendGrowth > 0 ? '+' : ''}{trendGrowth}%</strong> change from previous period
-                  </p>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#16A34A', marginTop: 2 }}>Total complaints: {totalComplaints.toLocaleString()}</div>
-                </div>
+                 <div>
+                   <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '.3px', marginBottom: 4 }}>Emerging Pattern</div>
+                   <p style={{ margin: 0, fontSize: 11, color: '#4B5563', lineHeight: 1.5 }}>
+                     Volume trend: <strong style={{ color: trendGrowth > 0 ? '#DC2626' : '#16A34A' }}>{trendGrowth > 0 ? '+' : ''}{trendGrowth}%</strong> change from previous period
+                   </p>
+                   <div style={{ fontSize: 11, fontWeight: 600, color: '#16A34A', marginTop: 2 }}>Total complaints: {totalComplaints.toLocaleString()}</div>
+                   {slaCompliance && (
+                     <div style={{ display: 'flex', gap: 16, marginTop: 12, fontSize: 10, color: '#6B7280' }}>
+                       <div>
+                         <div style={{ fontSize: 10, fontWeight: 600, color: '#16A34A' }}>{slaCompliance.met}</div>
+                         <div style={{ fontSize: 9 }}>Met SLA</div>
+                       </div>
+                       <div>
+                         <div style={{ fontSize: 10, fontWeight: 600, color: '#DC2626' }}>{slaCompliance.breached}</div>
+                         <div style={{ fontSize: 9 }}>Breached SLA</div>
+                       </div>
+                       <div>
+                         <div style={{ fontSize: 10, fontWeight: 600, color: '#10B981' }}>{slaCompliance.complianceRate}%</div>
+                         <div style={{ fontSize: 9 }}>Compliance Rate</div>
+                       </div>
+                     </div>
+                   )}
+                 </div>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '.3px', marginBottom: 4 }}>Top Categories</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 11 }}>

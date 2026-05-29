@@ -11,7 +11,7 @@ load_dotenv()
 class EmailSettings(BaseModel):
     mailgun_api_key: str = ""
     mailgun_domain: str = ""
-    from_address: str = "support@unionbankofindia.com"
+    from_address: str = "complaints@abhineet.net"
     inbound_webhook_key: str = ""
     enabled: bool = False
 
@@ -96,7 +96,7 @@ class Settings(BaseModel):
             email=EmailSettings(
                 mailgun_api_key=os.getenv("MAILGUN_API_KEY", ""),
                 mailgun_domain=os.getenv("MAILGUN_DOMAIN", ""),
-                from_address=os.getenv("EMAIL_FROM_ADDRESS", "support@unionbankofindia.com"),
+                from_address=os.getenv("EMAIL_FROM_ADDRESS", "complaints@abhineet.net"),
                 inbound_webhook_key=os.getenv("MAILGUN_INBOUND_WEBHOOK_KEY", ""),
                 enabled=bool(os.getenv("MAILGUN_API_KEY") and os.getenv("MAILGUN_DOMAIN")),
             ),

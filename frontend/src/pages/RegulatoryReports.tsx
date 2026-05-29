@@ -39,53 +39,68 @@ export function RegulatoryReports() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [selectedReport, setSelectedReport] = useState<DisplayReport | null>(null)
+  
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState<string | null>(null)
+  const [channelFilter, setChannelFilter] = useState<string | null>(null)
+  const [priorityFilter, setPriorityFilter] = useState<number | null>(null)
+  const [riskFilter, setRiskFilter] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
-  useEffect(() => {
-    setLoading(true)
-    setError(null)
-    api.listComplaints({ regulatory_flag: true, limit: 50 })
-      .then((res) => {
-        const grouped: Record<string, Complaint[]> = {}
-        res.complaints.forEach((c: Complaint) => {
-          const key = c.regulatory_obligation || 'Uncategorized'
-          if (!grouped[key]) grouped[key] = []
-          grouped[key].push(c)
-        })
+   useEffect(() => {
+     setLoading(true)
+     setError(null)
+     
+     // Build filters object
+     const filters: any = { regulatory_flag: true, limit: 50 }
+     if (statusFilter) filters.status = statusFilter
+     if (channelFilter) filters.channel = channelFilter
+     if (priorityFilter !== null) filters.priority_tier = priorityFilter
+     if (searchTerm) filters.search = searchTerm
+     
+     api.listComplaints(filters)
+       .then((res) => {
+         const grouped: Record<string, Complaint[]> = {}
+         res.complaints.forEach((c: Complaint) => {
+           const key = c.regulatory_obligation || 'Uncategorized'
+           if (!grouped[key]) grouped[key] = []
+           grouped[key].push(c)
+         })
 
-        const mapped: DisplayReport[] = Object.entries(grouped).map(([obligation, comps], i) => {
-          const categories: Record<string, number> = {}
-          comps.forEach((c: Complaint) => {
-            const ct = c.complaint_type || 'Other'
-            categories[ct] = (categories[ct] || 0) + 1
-          })
+         const mapped: DisplayReport[] = Object.entries(grouped).map(([obligation, comps], i) => {
+           const categories: Record<string, number> = {}
+           comps.forEach((c: Complaint) => {
+             const ct = c.complaint_type || 'Other'
+             categories[ct] = (categories[ct] || 0) + 1
+           })
 
-          const riskLevels = comps.filter((c) => c.severity_score != null && c.severity_score >= 8).length
-          const risk = riskLevels > 5 ? 'Critical' : riskLevels > 2 ? 'High' : riskLevels > 0 ? 'Medium' : 'Low'
+           const riskLevels = comps.filter((c) => c.severity_score != null && c.severity_score >= 8).length
+           const risk = riskLevels > 5 ? 'Critical' : riskLevels > 2 ? 'High' : riskLevels > 0 ? 'Medium' : 'Low'
 
-          const statuses = new Set(comps.map((c) => c.status))
-          const status = statuses.has('Escalated') ? 'Pending Review' : statuses.has('Open') ? 'Draft' : 'Submitted'
+           const statuses = new Set(comps.map((c) => c.status))
+           const status = statuses.has('Escalated') ? 'Pending Review' : statuses.has('Open') ? 'Draft' : 'Submitted'
 
-          return {
-            id: `REG-${2000 + i}`,
-            type: obligation,
-            regulator: 'RBI',
-            period: 'Current',
-            count: comps.length,
-            risk,
-            status,
-            deadline: status === 'Pending Review' ? 'Due in 2 days' : status === 'Draft' ? 'Due in 5 days' : 'Submitted',
-            deadlineHours: status === 'Pending Review' ? 48 : status === 'Draft' ? 120 : 0,
-            complaints: comps,
-            categories,
-            summary: `${comps.length} complaints flagged for regulatory reporting under "${obligation}".`,
-          }
-        })
-        setReports(mapped)
-        if (mapped.length > 0) setSelectedReport(mapped[0])
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load regulatory reports'))
-      .finally(() => setLoading(false))
-  }, [])
+           return {
+             id: `REG-${2000 + i}`,
+             type: obligation,
+             regulator: 'RBI',
+             period: 'Current',
+             count: comps.length,
+             risk,
+             status,
+             deadline: status === 'Pending Review' ? 'Due in 2 days' : status === 'Draft' ? 'Due in 5 days' : 'Submitted',
+             deadlineHours: status === 'Pending Review' ? 48 : status === 'Draft' ? 120 : 0,
+             complaints: comps,
+             categories,
+             summary: `${comps.length} complaints flagged for regulatory reporting under "${obligation}".`,
+           }
+         })
+         setReports(mapped)
+         if (mapped.length > 0) setSelectedReport(mapped[0])
+       })
+       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load regulatory reports'))
+       .finally(() => setLoading(false))
+   }, [period, statusFilter, channelFilter, priorityFilter, riskFilter, searchTerm])
 
   const toggle = (id: string) => setSelectedIds((prev) => {
     const next = new Set(prev)
@@ -159,42 +174,113 @@ export function RegulatoryReports() {
           </select>
         </header>
 
-        <div style={{
-          background: 'white', borderBottom: '1px solid #E5E7EB',
-          padding: '10px 28px', display: 'flex', flexDirection: 'column', gap: 10,
-          position: 'sticky', top: 0, zIndex: 10,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '.3px' }}>Filter</span>
-            {['All', 'RBI', 'Monthly', 'Pending Review', 'Critical', 'Draft', 'Submitted'].map((f) => (
-              <button key={f} type="button" style={{
-                padding: '4px 12px', borderRadius: 999, fontSize: 11, fontWeight: 600,
-                border: '1px solid #E5E7EB', background: 'white', color: '#6B7280',
-                cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s',
-              }}>{f}</button>
-            ))}
-            <div style={{ width: 1, height: 24, background: '#E5E7EB', margin: '0 4px' }} />
-            <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '.3px' }}>Sort</span>
-            <select style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #E5E7EB', fontSize: 12, fontWeight: 500, color: '#374151', background: '#F9FAFB', cursor: 'pointer', outline: 'none' }}>
-              {['Deadline', 'Risk Level', 'Submission Date', 'Priority', 'Newest'].map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
-            <div style={{ display: 'flex', border: '1px solid #E5E7EB', borderRadius: 6, overflow: 'hidden', marginLeft: 'auto' }}>
-              {['Report Queue', 'Calendar', 'Timeline', 'Audit View'].map((m) => (
-                <button key={m} type="button" style={{ padding: '4px 10px', fontSize: 11, fontWeight: 500, background: 'white', color: '#6B7280', border: 'none', cursor: 'pointer', borderRight: m !== 'Audit View' ? '1px solid #E5E7EB' : 'none' }}>{m}</button>
-              ))}
-            </div>
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>{reports.length} reports</span>
-          </div>
-          {selectedIds.size > 0 && (
-            <div style={{ display: 'flex', gap: 8, borderTop: '1px solid #F0F0F0', paddingTop: 8 }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: '#3B82F6', display: 'flex', alignItems: 'center' }}>{selectedIds.size} selected</span>
-              {['Generate', 'Review', 'Export', 'Submit', 'Assign Reviewer'].map((a) => (
-                <button key={a} type="button" onClick={() => setSelectedIds(new Set())}
-                  style={{ padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, border: '1px solid #D1D5DB', color: '#374151', background: 'white', cursor: 'pointer', whiteSpace: 'nowrap' }}>{a}</button>
-              ))}
-            </div>
-          )}
-        </div>
+         <div style={{
+           background: 'white', borderBottom: '1px solid #E5E7EB',
+           padding: '10px 28px', display: 'flex', flexDirection: 'column', gap: 10,
+           position: 'sticky', top: 0, zIndex: 10,
+         }}>
+           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+             <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '.3px' }}>Filter</span>
+             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+               {/* Status Filter */}
+               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                 <span style={{ fontSize: 10, color: '#6B7280' }}>Status:</span>
+                 <select 
+                   value={statusFilter ?? ''}
+                   onChange={(e) => setStatusFilter(e.target.value || null)}
+                   style={{ padding: '4px 8px', borderRadius: 4, border: '1px solid #E5E7EB', fontSize: 11, background: 'white' }}
+                 >
+                   <option value="">All Status</option>
+                   <option value="queued">Queued</option>
+                   <option value="new">New</option>
+                   <option value="in_progress">In Progress</option>
+                   <option value="resolved">Resolved</option>
+                   <option value="escalated">Escalated</option>
+                 </select>
+               </div>
+               
+               {/* Channel Filter */}
+               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                 <span style={{ fontSize: 10, color: '#6B7280' }}>Channel:</span>
+                 <select 
+                   value={channelFilter ?? ''}
+                   onChange={(e) => setChannelFilter(e.target.value || null)}
+                   style={{ padding: '4px 8px', borderRadius: 4, border: '1px solid #E5E7EB', fontSize: 11, background: 'white' }}
+                 >
+                   <option value="">All Channels</option>
+                   <option value="whatsapp">WhatsApp</option>
+                   <option value="app">App</option>
+                   <option value="email">Email</option>
+                   <option value="ivr">IVR</option>
+                   <option value="phone">Phone</option>
+                   <option value="web">Web</option>
+                 </select>
+               </div>
+               
+               {/* Priority Filter */}
+               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                 <span style={{ fontSize: 10, color: '#6B7280' }}>Priority:</span>
+                 <select 
+                   value={priorityFilter !== null ? priorityFilter.toString() : ''}
+                   onChange={(e) => {
+                     const val = e.target.value;
+                     setPriorityFilter(val === '' ? null : parseInt(val));
+                   }}
+                   style={{ padding: '4px 8px', borderRadius: 4, border: '1px solid #E5E7EB', fontSize: 11, background: 'white' }}
+                 >
+                   <option value="">All Priorities</option>
+                   <option value="1">1 - Low</option>
+                   <option value="2">2</option>
+                   <option value="3">3</option>
+                   <option value="4">4</option>
+                   <option value="5">5 - High</option>
+                 </select>
+               </div>
+               
+               {/* Risk Filter */}
+               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                 <span style={{ fontSize: 10, color: '#6B7280' }}>Risk:</span>
+                 <select 
+                   value={riskFilter ?? ''}
+                   onChange={(e) => setRiskFilter(e.target.value || null)}
+                   style={{ padding: '4px 8px', borderRadius: 4, border: '1px solid #E5E7EB', fontSize: 11, background: 'white' }}
+                 >
+                   <option value="">All Risk Levels</option>
+                   <option value="critical">Critical</option>
+                   <option value="high">High</option>
+                   <option value="medium">Medium</option>
+                   <option value="low">Low</option>
+                 </select>
+               </div>
+             </div>
+             
+             <div style={{ width: 1, height: 24, background: '#E5E7EB', margin: '0 8px' }} />
+             
+             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+               <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '.3px' }}>Search</span>
+               <input
+                 type="text"
+                 placeholder="Search report ID, complaint category, RBI code..."
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+                 style={{ padding: '4px 8px', borderRadius: 4, border: '1px solid #E5E7EB', fontSize: 11, width: 200 }}
+               />
+             </div>
+           </div>
+           
+           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
+             <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '.3px' }}>Sort</span>
+             <select style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #E5E7EB', fontSize: 12, fontWeight: 500, color: '#374151', background: '#F9FAFB', cursor: 'pointer', outline: 'none' }}>
+               {['Deadline', 'Risk Level', 'Submission Date', 'Priority', 'Newest'].map((o) => <option key={o} value={o}>{o}</option>)}
+             </select>
+             <div style={{ display: 'flex', border: '1px solid #E5E7EB', borderRadius: 6, overflow: 'hidden', marginLeft: 'auto' }}>
+               {['Report Queue', 'Calendar', 'Timeline', 'Audit View'].map((m) => (
+                 <button key={m} type="button" style={{ padding: '4px 10px', fontSize: 11, fontWeight: 500, background: 'white', color: '#6B7280', border: 'none', cursor: 'pointer', borderRight: m !== 'Audit View' ? '1px solid #E5E7EB' : 'none' }}>{m}</button>
+               ))}
+             </div>
+             <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>{reports.length} reports</span>
+           </div>
+         </div>
 
         <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 24 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: 24, alignItems: 'start' }}>

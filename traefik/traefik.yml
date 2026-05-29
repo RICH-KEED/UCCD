@@ -1,0 +1,21 @@
+# traefik.yml
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: false
+
+log:
+  level: INFO
+
+api:
+  dashboard: true
+  insecure: true # WARNING: Do not use in production!
+
+entryPoints:
+  web:
+    address: ":80"
+
+providers:
+  docker:
+    exposedByDefault: false
+  file:
+    filename: /etc/traefik/dynamic.yml
