@@ -23,6 +23,10 @@ class EmailConversationSettings(BaseModel):
     enabled: bool = False
 
 
+class WhatsAppConversationSettings(BaseModel):
+    enabled: bool = False
+
+
 class TwitterSettings(BaseModel):
     username: str = ""
     password: str = ""
@@ -68,6 +72,7 @@ class Settings(BaseModel):
     api_host: str = "http://localhost:8000"
     email: EmailSettings = EmailSettings()
     email_conversation: EmailConversationSettings = EmailConversationSettings()
+    whatsapp_conversation: WhatsAppConversationSettings = WhatsAppConversationSettings()
     twitter: TwitterSettings = TwitterSettings()
     instagram: InstagramSettings = InstagramSettings()
     whatsapp: WhatsAppSettings = WhatsAppSettings()
@@ -103,6 +108,9 @@ class Settings(BaseModel):
             ),
             email_conversation=EmailConversationSettings(
                 enabled=os.getenv("EMAIL_COMPLAINTS_CONVERSATION_MODE", "false").lower() == "true",
+            ),
+            whatsapp_conversation=WhatsAppConversationSettings(
+                enabled=os.getenv("WHATSAPP_COMPLAINTS_CONVERSATION_MODE", "false").lower() == "true",
             ),
             twitter=TwitterSettings(
                 username=os.getenv("TWITTER_USERNAME", ""),

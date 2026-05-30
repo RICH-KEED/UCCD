@@ -18,6 +18,12 @@ from services.email_conversation_agent import (
     handle_follow_up_email,
     send_complaint_confirmation,
 )
+from services.whatsapp_conversation_agent import (
+    get_conversation as get_whatsapp_conversation,
+    handle_first_contact_whatsapp,
+    handle_follow_up_whatsapp,
+    send_complaint_confirmation_whatsapp,
+)
 from services.channels import get_channel
 
 logger = logging.getLogger(__name__)
@@ -48,6 +54,61 @@ def _handle_complaint(event: WebhookEvent, complaint_payload: dict, db: Session)
 def _is_email_conversation_mode() -> bool:
     settings = get_settings()
     return settings.email_conversation.enabled
+
+
+def _is_whatsapp_conversation_mode() -> bool:
+    settings = get_settings()
+    return settings.whatsapp_conversation.enabled
+
+
+async def _process_whatsapp_conversation(chat_id: str, sender: str, text: str, db: Session) -> dict:
+    logger.info(f"[WHATSAPP_WEBHOOK] _process_whatsapp_conversation START — chat_id={chat_id}")
+    existing = get_whatsapp_conversation(chat_id)
+
+    if existing:
+        result = await handle_follow_up_whatsapp(chat_id, text, sender)
+    else:
+        result = await handle_first_contact_whatsapp(chat_id, text, sender)
+
+    if result["action"] == "reply":
+        channel = get_channel("whatsapp")
+        if channel and channel.enabled:
+            await channel.send_message(chat_id, result["text"])
+        return {"status": "replied", "stage": result["stage"], "language": result.get("language")}
+
+    complaint_payload = result["complaint_payload"]
+    details = result.get("details", {})
+
+    event = WebhookEvent(
+        channel="whatsapp",
+        event_type="message",
+        raw_payload={"chatId": chat_id, "body": text, "sender": sender},
+        received_at=datetime.now(timezone.utc),
+        processed=True,
+        processed_at=datetime.now(timezone.utc),
+    )
+    db.add(event)
+    db.commit()
+
+    complaint = create_complaint_internal(complaint_payload)
+    event.complaint_id = str(complaint.id)
+    db.commit()
+
+    confirmation_task = asyncio.create_task(
+        send_complaint_confirmation_whatsapp(
+            chat_id=chat_id,
+            complaint_id=str(complaint.id),
+            customer_name=details.get("customer_name", "Customer"),
+            language=result.get("language", "en"),
+        )
+    )
+    confirmation_task.add_done_callback(
+        lambda t: logger.error(
+            f"WhatsApp complaint confirmation task failed for {chat_id}: {t.exception()}"
+        ) if t.exception() else None
+    )
+
+    return {"status": "complaint_created", "complaint_id": str(complaint.id)}
 
 
 async def _process_email_direct(from_addr: str, subject: str, body_text: str, message_id: str, db: Session) -> dict:
@@ -321,25 +382,37 @@ async def openwa_callback(request: Request, db: Session = Depends(get_db)):
             db.commit()
             return {"status": "ignored", "reason": "missing_fields"}
 
-        from services.channels import extract_details_llm
-        details = extract_details_llm(text)
+        if _is_whatsapp_conversation_mode():
+            result = await _process_whatsapp_conversation(
+                chat_id=chat_id,
+                sender=sender,
+                text=text,
+                db=db,
+            )
+            event.processed = True
+            event.processed_at = datetime.now(timezone.utc)
+            db.commit()
+            return result
+        else:
+            from services.channels import extract_details_llm
+            details = extract_details_llm(text)
 
-        complaint_payload = {
-            "customer_id": sender or f"WA_{chat_id}",
-            "channel": "whatsapp",
-            "source_ref": chat_id,
-            "raw_text": text,
-        }
-        if details.get("name"):
-            complaint_payload["customer_name"] = details["name"]
-        if details.get("account_no"):
-            complaint_payload["account_number"] = details["account_no"]
-        if details.get("phone"):
-            complaint_payload["customer_phone"] = details["phone"]
-        if details.get("email"):
-            complaint_payload["customer_email"] = details["email"]
+            complaint_payload = {
+                "customer_id": sender or f"WA_{chat_id}",
+                "channel": "whatsapp",
+                "source_ref": chat_id,
+                "raw_text": text,
+            }
+            if details.get("name"):
+                complaint_payload["customer_name"] = details["name"]
+            if details.get("account_no"):
+                complaint_payload["account_number"] = details["account_no"]
+            if details.get("phone"):
+                complaint_payload["customer_phone"] = details["phone"]
+            if details.get("email"):
+                complaint_payload["customer_email"] = details["email"]
 
-        _handle_complaint(event, complaint_payload, db)
+            _handle_complaint(event, complaint_payload, db)
 
     except Exception as e:
         logger.error(f"open-wa webhook processing failed: {e}")
