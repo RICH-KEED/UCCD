@@ -308,9 +308,12 @@ async def openwa_callback(request: Request, db: Session = Depends(get_db)):
     db.commit()
 
     try:
-        chat_id = payload.get("chatId") or payload.get("from")
-        text = payload.get("body") or payload.get("content", "")
-        sender = payload.get("sender", {}).get("id", payload.get("author", ""))
+        # OpenWA webhook dispatches put the message fields inside a nested "data" dict
+        msg_data = payload.get("data") if isinstance(payload.get("data"), dict) else payload
+
+        chat_id = msg_data.get("chatId") or msg_data.get("from")
+        text = msg_data.get("body") or msg_data.get("content", "")
+        sender = msg_data.get("sender", {}).get("id", msg_data.get("author", ""))
 
         if not text or not chat_id:
             event.processed = True
@@ -318,12 +321,24 @@ async def openwa_callback(request: Request, db: Session = Depends(get_db)):
             db.commit()
             return {"status": "ignored", "reason": "missing_fields"}
 
+        from services.channels import extract_details_llm
+        details = extract_details_llm(text)
+
         complaint_payload = {
             "customer_id": sender or f"WA_{chat_id}",
             "channel": "whatsapp",
             "source_ref": chat_id,
             "raw_text": text,
         }
+        if details.get("name"):
+            complaint_payload["customer_name"] = details["name"]
+        if details.get("account_no"):
+            complaint_payload["account_number"] = details["account_no"]
+        if details.get("phone"):
+            complaint_payload["customer_phone"] = details["phone"]
+        if details.get("email"):
+            complaint_payload["customer_email"] = details["email"]
+
         _handle_complaint(event, complaint_payload, db)
 
     except Exception as e:
