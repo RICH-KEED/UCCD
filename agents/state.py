@@ -8,6 +8,7 @@ class ComplaintState(TypedDict, total=False):
     customer_id : str
     bot_slots : dict
     language_code : str
+    pipeline_run_id : str
 
     complaint_type : str
     product_code : str

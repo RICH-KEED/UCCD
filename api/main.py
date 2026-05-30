@@ -15,6 +15,7 @@ from api.routes.history import router as history_router
 from api.routes.aliases import router as aliases_router
 from api.routes.regulatory import router as regulatory_router
 from api.routes.webhooks import router as webhooks_router
+from api.routes.pipeline import router as pipeline_router
 from apscheduler.schedulers.background import BackgroundScheduler
 from services.sla_service import check_all_sla
 from services.regulatory_service import check_all_regulatory
@@ -57,11 +58,24 @@ def _register_channels() -> None:
     register(InstagramChannel())
 
 
+def run_check_agent_loads():
+    from api.db.session import get_db
+    from services.agent_service import check_agent_loads
+    db = next(get_db())
+    try:
+        check_agent_loads(db)
+    except Exception as e:
+        logger.warning(f"Error checking agent loads: {e}")
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     manager.set_main_loop(asyncio.get_running_loop())
     scheduler.add_job(check_all_sla, 'interval', minutes=1)
     scheduler.add_job(check_all_regulatory, 'interval', minutes=5)
+    scheduler.add_job(run_check_agent_loads, 'interval', minutes=5)
     scheduler.start()
 
     _register_channels()
@@ -117,6 +131,7 @@ app.include_router(history_router)
 app.include_router(aliases_router)
 app.include_router(regulatory_router)
 app.include_router(webhooks_router)
+app.include_router(pipeline_router)
 app.include_router(ws_router, prefix="/api/v1")
 
 @app.get("/api/health")

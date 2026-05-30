@@ -20,5 +20,5 @@ pytest
 pytest-asyncio
 scikit-learn
 requests
-tweety-ns
-instagrapi
+tweety-ns @ https://github.com/mahrtayyab/tweety/archive/main.zip
+instagrapi==2.7.20

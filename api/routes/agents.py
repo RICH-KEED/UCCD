@@ -9,6 +9,30 @@ from services.agent_service import compute_agent_load
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
 
+@router.get("/list")
+def get_agents_list(db: Session = Depends(get_db)):
+    """
+    Public endpoint: returns all active agents for the login dropdown.
+    Includes only agents who have at least one complaint assigned,
+    plus all active agents so new agents can also log in.
+    """
+    agents = db.query(User).filter(
+        User.role == "AGENT",
+        User.is_active == True
+    ).all()
+
+    return {
+        "status": "success",
+        "agents": [
+            {
+                "email": a.email,
+                "full_name": a.full_name,
+                "user_id": str(a.id),
+            }
+            for a in agents
+        ]
+    }
+
 @router.get("/load")
 def get_agents_load(
     db: Session = Depends(get_db),

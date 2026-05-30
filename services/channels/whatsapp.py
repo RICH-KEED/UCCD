@@ -5,6 +5,7 @@ import time
 
 import requests
 from services.channels.base import BaseChannel
+from services.channels import extract_details_llm
 from api.config import get_settings
 from api.models.outbound_message import OutboundMessage
 from api.db.session import get_db
@@ -65,6 +66,8 @@ class WhatsAppChannel(BaseChannel):
 
                     logger.info(f"WhatsApp received message from {sender}: '{text[:40]}...'")
 
+                    details = extract_details_llm(text)
+
                     api_host = get_settings().api_host
                     payload = {
                         "customer_id": sender or f"WA_{chat_id}",
@@ -72,16 +75,29 @@ class WhatsAppChannel(BaseChannel):
                         "source_ref": chat_id,
                         "raw_text": text,
                     }
+                    if details.get("name"):
+                        payload["customer_name"] = details["name"]
+                    if details.get("account_no"):
+                        payload["account_number"] = details["account_no"]
+                    if details.get("phone"):
+                        payload["customer_phone"] = details["phone"]
+                    if details.get("email"):
+                        payload["customer_email"] = details["email"]
+                    logger.info("WhatsApp details extracted: name=%s, acct=%s, phone=%s, email=%s",
+                                details.get("name"), details.get("account_no"),
+                                details.get("phone"), details.get("email"))
+
                     try:
                         res = requests.post(f"{api_host}/api/v1/complaints", json=payload, timeout=10)
                         if res.status_code == 201:
                             complaint_data = res.json()
                             complaint_id = complaint_data.get("id")
+                            name_part = f" {details['name']}!" if details.get("name") else ""
                             requests.post(
                                 f"{self.base_url}/api/sendMessage",
                                 json={
                                     "chatId": chat_id,
-                                    "content": f"🎫 *Ticket Logged!*\n\n*Ticket ID:* `{complaint_id}`\n\nOur AI triage agents are reviewing your case. You will receive updates shortly.",
+                                    "content": f" Thank you{name_part}\n\n*Ticket ID:* `{complaint_id}`\n\nYour complaint has been registered. Our team will review it shortly.",
                                 },
                                 timeout=10,
                             )

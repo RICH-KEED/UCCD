@@ -38,6 +38,7 @@ import {
   WifiOff,
   Zap,
 } from 'lucide-react'
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 function severityLevels(score: number | null | undefined) {
   if (score === null || score === undefined) return { label: 'Low', color: 'var(--success)', bg: 'color-mix(in oklch, var(--success) 12%, transparent)' }
@@ -68,6 +69,15 @@ function DraftSkeleton() {
       <Skeleton className="h-3 w-1/3 mt-3" />
     </div>
   )
+}
+
+const getEmotionValue = (emotion: string): number => {
+  const normalized = (emotion || '').toLowerCase()
+  if (['hopeful', 'positive', 'happy', 'satisfied', 'relieved'].includes(normalized)) return 1.0
+  if (['neutral', 'steady', 'calm'].includes(normalized)) return 0.0
+  if (['frustrated', 'anxious', 'concerned', 'worried', 'stressed', 'disappointed'].includes(normalized)) return -0.5
+  if (['angry', 'hostile', 'irate', 'furious'].includes(normalized)) return -1.0
+  return 0.0
 }
 
 export function ComplaintDetailPage() {
@@ -305,6 +315,18 @@ export function ComplaintDetailPage() {
   const hasTranslation = isNonEnglish && !!complaint.translated_text
   const displayText = hasTranslation && !showOriginal ? complaint.translated_text! : complaint.raw_text
 
+  // Map emotion arc to chart data
+  const initialEmotion = String(emotionArc?.initial || 'Neutral')
+  const currentEmotion = String(emotionArc?.current || 'Neutral')
+  const initialVal = getEmotionValue(initialEmotion)
+  const currentVal = getEmotionValue(currentEmotion)
+  const emotionData = [
+    { name: 'Initial', score: initialVal, label: initialEmotion },
+    { name: 'Current', score: currentVal, label: currentEmotion }
+  ]
+  const isPositiveSlope = currentVal >= initialVal
+  const lineColor = isPositiveSlope ? '#10b981' : '#ef4444'
+
   return (
     <SidebarProvider className="h-dvh">
       <AppSidebar activeItem={complaint.assigned_to ? 'My Queue' : 'All Complaints'} />
@@ -396,6 +418,69 @@ export function ComplaintDetailPage() {
                     <div className="mt-2 text-[11px] text-muted-foreground">{complaint.assigned_to || 'Unassigned'}</div>
                   </div>
                 </div>
+
+                {emotionArc && (
+                  <div className="mt-4 rounded-xl border bg-card p-4 shadow-sm">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                        <Activity className="h-3.5 w-3.5 text-primary" /> Customer Emotion Arc
+                      </div>
+                      <div className="text-[11px] font-semibold text-muted-foreground">
+                        Peak Intensity: <span className="text-foreground font-bold">{String(emotionArc.intensity || '5')}/10</span>
+                      </div>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-[1fr_200px]">
+                      <div className="flex flex-col justify-center gap-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <div>
+                            <span className="text-muted-foreground uppercase text-[9px] block">Initial Sentiment</span>
+                            <span className="font-semibold text-destructive">{initialEmotion}</span>
+                          </div>
+                          <div className="text-muted-foreground text-sm font-bold">➔</div>
+                          <div className="text-right">
+                            <span className="text-muted-foreground uppercase text-[9px] block">Current Sentiment</span>
+                            <span className={`font-semibold ${isPositiveSlope ? 'text-success' : 'text-destructive'}`}>
+                              {currentEmotion}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="rounded-lg bg-muted/40 p-2 text-center text-xs border border-border/50">
+                          Trajectory: <strong className="text-primary">{String(emotionArc.trajectory || 'Steady').toUpperCase()}</strong>
+                        </div>
+                      </div>
+                      <div className="h-[80px] w-full flex items-center justify-center bg-muted/20 rounded-lg p-2 border border-border/50">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={emotionData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                            <XAxis dataKey="name" hide />
+                            <YAxis domain={[-1.2, 1.2]} hide />
+                            <Tooltip
+                              content={({ active, payload }) => {
+                                if (active && payload && payload.length) {
+                                  const item = payload[0].payload;
+                                  return (
+                                    <div className="rounded-md border border-border bg-popover px-2 py-1 text-[11px] text-popover-foreground shadow-md">
+                                      <span className="font-bold">{item.name}:</span> {item.label} ({item.score.toFixed(1)})
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              }}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="score"
+                              stroke={lineColor}
+                              strokeWidth={3}
+                              dot={{ r: 5, fill: lineColor, stroke: 'var(--color-bg)', strokeWidth: 2 }}
+                              activeDot={{ r: 7 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
 
                 {(complaint.regulatory_obligation || complaint.cluster_id) && (
                   <div className="mt-4 grid gap-3 md:grid-cols-2">

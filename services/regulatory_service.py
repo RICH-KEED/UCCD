@@ -100,14 +100,29 @@ def clear_regulatory_timer(complaint_id: str):
 
 
 def check_all_regulatory():
-    keys = r.keys("reg:*")
-    for key in keys:
-        complaint_id = key.split(":", 1)[1]
-        status = get_regulatory_status(complaint_id)
-        if status is None:
+    meta_keys = r.keys("reg_meta:*")
+    for key in meta_keys:
+        try:
+            complaint_id = key.split(":", 1)[1]
+        except IndexError:
             continue
 
         meta_key = f"reg_meta:{complaint_id}"
+
+        # If the regulatory timer key has expired (does not exist), but metadata is still present:
+        if not r.exists(f"reg:{complaint_id}"):
+            alert_critical = r.hget(meta_key, "alert_critical")
+            if alert_critical != "1":
+                fire_regulatory_alert(complaint_id, "DEADLINE_BREACHED")
+                r.hset(meta_key, "alert_critical", "1")
+                _mark_regulatory_breached(complaint_id)
+            clear_regulatory_timer(complaint_id)
+            continue
+
+        # If regulatory timer is still active, perform normal threshold alerts:
+        status = get_regulatory_status(complaint_id)
+        if status is None:
+            continue
 
         if status["critical_breached"] and status["alerts"]["critical"] == "0":
             fire_regulatory_alert(complaint_id, "DEADLINE_BREACHED")
@@ -117,10 +132,6 @@ def check_all_regulatory():
         elif status["warning_breached"] and status["alerts"]["warning"] == "0":
             fire_regulatory_alert(complaint_id, "DEADLINE_WARNING")
             r.hset(meta_key, "alert_warning", "1")
-
-        ttl = r.ttl(f"reg:{complaint_id}")
-        if ttl == -2:
-            clear_regulatory_timer(complaint_id)
 
 
 def _mark_regulatory_breached(complaint_id: str):

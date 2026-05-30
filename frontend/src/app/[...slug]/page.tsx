@@ -16,6 +16,7 @@ const ThreeSixtyViewPage = lazy(() => import('@/components/three-sixty-view-page
 const TrendsPage = lazy(() => import('@/components/trends-page').then(m => ({ default: m.TrendsPage })))
 const RootCausePage = lazy(() => import('@/components/root-cause-page').then(m => ({ default: m.RootCausePage })))
 const RegulatoryReportsPage = lazy(() => import('@/components/regulatory-reports-page').then(m => ({ default: m.RegulatoryReportsPage })))
+const PipelineShowcasePage = lazy(() => import('@/components/pipeline-showcase-page').then(m => ({ default: m.PipelineShowcasePage })))
 const SearchPage = lazy(() => import('@/components/search-page').then(m => ({ default: m.SearchPage })))
 const SettingsPage = lazy(() => import('@/components/settings-page').then(m => ({ default: m.SettingsPage })))
 const NotFoundPage = lazy(() => import('@/components/not-found').then(m => ({ default: m.NotFoundPage })))
@@ -50,9 +51,10 @@ function AppRouter() {
       {router.route === 'trends' && <TrendsPage />}
       {router.route === 'root-cause' && <RootCausePage />}
       {router.route === 'regulatory' && <RegulatoryReportsPage />}
+      {router.route === 'pipeline' && <PipelineShowcasePage />}
       {router.route === 'search' && <SearchPage />}
       {router.route === 'settings' && <SettingsPage />}
-      {!['login','landing','dashboard','complaints','complaint-detail','escalations','sla-breaches','360-view','ai-drafts','trends','root-cause','regulatory','search','settings'].includes(router.route) && <NotFoundPage />}
+      {!['login','landing','dashboard','complaints','complaint-detail','escalations','sla-breaches','360-view','ai-drafts','trends','root-cause','regulatory','pipeline','search','settings'].includes(router.route) && <NotFoundPage />}
     </Suspense>
   )
 }
@@ -71,6 +73,7 @@ function getRouteFromSlug(slug: string[]): RoutePath {
     case '/trends': return 'trends'
     case '/root-cause': return 'root-cause'
     case '/regulatory': return 'regulatory'
+    case '/pipeline': return 'pipeline'
     case '/search': return 'search'
     case '/settings': return 'settings'
     default: return 'not-found'

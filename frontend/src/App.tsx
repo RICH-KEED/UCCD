@@ -1,18 +1,19 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
-import { Login } from './pages/Login'
-import { LandingPage } from './pages/LandingPage'
-import { Dashboard } from './pages/Dashboard'
-import { AllComplaints } from './pages/AllComplaints'
-import { SlaBreaches } from './pages/SlaBreaches'
-import { ThreeSixtyView } from './pages/ThreeSixtyView'
-import { Escalations } from './pages/Escalations'
-import { AiDrafts } from './pages/AiDrafts'
-import { Trends } from './pages/Trends'
-import { RootCause } from './pages/RootCause'
-import { RegulatoryReports } from './pages/RegulatoryReports'
-import { SearchPage } from './pages/SearchPage'
-import { ComplaintDetail } from './pages/ComplaintDetail'
+import { Login } from './vite-pages/Login'
+import { LandingPage } from './vite-pages/LandingPage'
+import { Dashboard } from './vite-pages/Dashboard'
+import { AllComplaints } from './vite-pages/AllComplaints'
+import { SlaBreaches } from './vite-pages/SlaBreaches'
+import { ThreeSixtyView } from './vite-pages/ThreeSixtyView'
+import { Escalations } from './vite-pages/Escalations'
+import { AiDrafts } from './vite-pages/AiDrafts'
+import { Trends } from './vite-pages/Trends'
+import { RootCause } from './vite-pages/RootCause'
+import { RegulatoryReports } from './vite-pages/RegulatoryReports'
+import { SearchPage } from './vite-pages/SearchPage'
+import { PipelineShowcase } from './vite-pages/PipelineShowcase'
+import { ComplaintDetail } from './vite-pages/ComplaintDetail'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import { NotFound } from './components/uccd/NotFound'
 
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="trends" element={<Trends />} />
           <Route path="root-cause" element={<RootCause />} />
           <Route path="regulatory" element={<RegulatoryReports />} />
+          <Route path="pipeline" element={<PipelineShowcase />} />
           <Route path="search" element={<SearchPage />} />
         </Route>
 

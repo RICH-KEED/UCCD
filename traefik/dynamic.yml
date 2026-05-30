@@ -1,0 +1,34 @@
+# dynamic.yml
+http:
+  routers:
+  # Dashboard (OpenWA)
+  dashboard:
+    rule: Host(`localhost`) && (PathPrefix(`/`) || PathPrefix(`/app`))
+    entryPoints:
+      - web
+    service: dashboard
+    middlewares:
+      - dashboard-stripprefix
+
+  # Traefik Dashboard
+  traefik:
+    rule: Host(`localhost`) && PathPrefix(`/api`) || PathPrefix(`/dashboard`)
+    entryPoints:
+      - web
+    service: traefik-internal@internal
+
+  services:
+  # Dashboard service
+  dashboard:
+    loadBalancer:
+      servers:
+        - url: http://openwa-dashboard:80
+  # Traefik internal service is already defined
+
+  middlewares:
+  # Strip the prefix for the dashboard if needed
+  dashboard-stripprefix:
+    stripPrefix:
+      prefixes:
+        - /app
+      forceSlash: false

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import uuid
 from dotenv import load_dotenv
 from langgraph.graph import StateGraph, START, END
 from agents.state import ComplaintState
@@ -25,6 +26,7 @@ from services.sla_service import set_sla_timer
 from services.regulatory_service import set_regulatory_timer
 from services.translation_service import SarvamTranslationService, TranslationStage
 from services.agent_service import auto_assign_complaint
+from api.websocket import broadcast_pipeline_stage, broadcast_pipeline_completed
 
 load_dotenv()
 
@@ -38,6 +40,8 @@ async def run_translation(
     translation_service: SarvamTranslationService = None,
 ) -> dict:
     svc = translation_service or SarvamTranslationService()
+    complaint_id = str(state["complaint_id"])
+    pipeline_run_id = state.get("pipeline_run_id", "")
     try:
         result = await svc.translate(
             text=state["raw_text"],
@@ -45,11 +49,18 @@ async def run_translation(
         )
     except Exception as e:
         logger.error(f"Translation failed in pipeline: {e}")
+        broadcast_pipeline_stage(complaint_id, pipeline_run_id, "translation", "failed", {"error": str(e)})
         return {
             "translated_text": state["raw_text"],
             "detected_language": None,
             "translation_status": "failed"
         }
+    broadcast_pipeline_stage(complaint_id, pipeline_run_id, "translation", "completed", {
+        "detected_language": result["detected_language"],
+        "translation_status": result["translation_status"],
+        "original_length": len(state["raw_text"]),
+        "translated_length": len(result["translated_text"]),
+    })
     return {
         "translated_text": result["translated_text"],
         "detected_language": result["detected_language"],
@@ -59,7 +70,16 @@ async def run_translation(
 @time_node("nlp")
 def run_nlp(state: ComplaintState) -> dict:
     text = state.get("translated_text") or state["raw_text"]
+    complaint_id = str(state["complaint_id"])
+    pipeline_run_id = state.get("pipeline_run_id", "")
     result = classify_complaint(text)
+    broadcast_pipeline_stage(complaint_id, pipeline_run_id, "nlp", "completed", {
+        "complaint_type": result.get("complaint_type"),
+        "product_code": result.get("product_code"),
+        "intent": result.get("intent"),
+        "regulatory_obligation": result.get("regulatory_obligation"),
+        "type_confidence": result.get("type_confidence"),
+    })
     return {
         "complaint_type": result.get("complaint_type"),
         "product_code": result.get("product_code"),
@@ -71,8 +91,10 @@ def run_nlp(state: ComplaintState) -> dict:
 @time_node("merge_and_save")
 def merge_and_save(state: ComplaintState) -> dict:
     db = next(get_db())
+    complaint_id_str = str(state["complaint_id"])
+    pipeline_run_id = state.get("pipeline_run_id", "")
+    assigned_agent = None
     try:
-        complaint_id_str = str(state["complaint_id"])
         complaint = db.query(Complaint).filter(Complaint.id == complaint_id_str).first()
         if complaint is None:
             return {}
@@ -105,6 +127,14 @@ def merge_and_save(state: ComplaintState) -> dict:
         complaint.updated_at = datetime.now(IST)
 
         db.commit()
+
+        broadcast_pipeline_stage(complaint_id_str, pipeline_run_id, "merge_and_save", "completed", {
+            "complaint_type": complaint.complaint_type,
+            "severity_score": complaint.severity_score,
+            "sla_tier": complaint.sla_tier,
+            "breach_probability": complaint.breach_probability,
+            "pre_escalate": complaint.pre_escalate,
+        })
 
         # Send live updates to customer on pipeline completion via channel registry
         if complaint.source_ref:
@@ -148,11 +178,17 @@ Tone constraints:
         try:
             assigned = auto_assign_complaint(db, str(complaint.id), complaint.complaint_type)
             if assigned:
+                assigned_agent = assigned
                 logger.info(f"AI auto-assigned complaint {complaint.id} → {assigned}")
         except Exception as e:
             logger.warning(f"Auto-assignment failed for {complaint.id}: {e}")
     finally:
         db.close()
+
+        try:
+            broadcast_pipeline_completed(complaint_id_str, pipeline_run_id, assigned_agent)
+        except Exception:
+            pass
             
     return {}
 
@@ -208,12 +244,14 @@ def run_pipeline(
     bot_slots: dict = None,
     language_code: str = None
 ) -> ComplaintState:
+    pipeline_run_id = str(uuid.uuid4())
     initial_state : ComplaintState = {
         "complaint_id": complaint_id,
         "raw_text": raw_text,
         "channel": channel,
         "customer_id": customer_id,
         "bot_slots": bot_slots or {},
-        "language_code": language_code
+        "language_code": language_code,
+        "pipeline_run_id": pipeline_run_id,
     }
     return asyncio.run(pipeline.ainvoke(initial_state))

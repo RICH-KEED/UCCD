@@ -27,10 +27,11 @@ class TwitterSettings(BaseModel):
     username: str = ""
     password: str = ""
     email: str = ""
+    auth_token: str = ""
     monitor_mentions: bool = True
 
     def is_configured(self) -> bool:
-        return bool(self.username and self.password)
+        return bool(self.username and (self.password or self.auth_token))
 
 
 class InstagramSettings(BaseModel):
@@ -107,6 +108,7 @@ class Settings(BaseModel):
                 username=os.getenv("TWITTER_USERNAME", ""),
                 password=os.getenv("TWITTER_PASSWORD", ""),
                 email=os.getenv("TWITTER_EMAIL", ""),
+                auth_token=os.getenv("TWITTER_AUTH_TOKEN", ""),
                 monitor_mentions=os.getenv("TWITTER_MONITOR_MENTIONS", "true").lower() != "false",
             ),
             instagram=InstagramSettings(

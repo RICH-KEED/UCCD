@@ -8,11 +8,11 @@ logger = logging.getLogger(__name__)
 MAX_TICKETS_PER_AGENT = 15
 
 AGENT_DEPARTMENT_MAP: dict[str, str] = {
-    "rahul.sharma@hdfc.com": "loans",
-    "priya.patel@hdfc.com": "technical",
-    "amit.kumar@hdfc.com": "cards",
-    "sneha.gupta@hdfc.com": "accounts",
-    "vikram.singh@hdfc.com": "service",
+    "rahul.sharma@unionbank.com": "loans",
+    "priya.patel@unionbank.com": "technical",
+    "amit.kumar@unionbank.com": "cards",
+    "sneha.gupta@unionbank.com": "accounts",
+    "vikram.singh@unionbank.com": "service",
 }
 
 COMPLAINT_TYPE_TO_DEPT: dict[str, str] = {
@@ -157,4 +157,9 @@ def check_agent_loads(db: Session) -> list[dict]:
             continue
         if count > MAX_TICKETS_PER_AGENT:
             overloaded.append({"agent": agent, "active_tickets": count, "capacity": MAX_TICKETS_PER_AGENT})
+            from api.websocket import broadcast_agent_overload
+            try:
+                broadcast_agent_overload(agent, count, MAX_TICKETS_PER_AGENT)
+            except Exception:
+                pass
     return overloaded

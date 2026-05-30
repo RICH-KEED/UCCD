@@ -124,6 +124,13 @@ Example response: High severity card fraud ticket under short 24-hour SLA. Immed
         except Exception as e:
             escalation_reason = f"High risk of SLA breach ({breach_probability*100:.0f}%) due to severity and queue volume."
             
+        # Broadcast the prediction to the WebSocket supervisor channel
+        from api.websocket import broadcast_violation_predicted
+        try:
+            broadcast_violation_predicted(str(state.get("complaint_id")), breach_probability, escalation_reason)
+        except Exception as ws_err:
+            logger.warning(f"Failed to broadcast violation_predicted: {ws_err}")
+            
     return {
         "breach_probability": breach_probability,
         "pre_escalate": pre_escalate,

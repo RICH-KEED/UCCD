@@ -25,12 +25,11 @@ DEMO_USERS = [
 ]
 
 AGENT_USERS = [
-    {"email": "rahul.sharma@hdfc.com", "full_name": "Rahul Sharma", "role": "AGENT", "department": "loans", "password": "hdfc123"},
-    {"email": "priya.patel@hdfc.com", "full_name": "Priya Patel", "role": "AGENT", "department": "technical", "password": "hdfc123"},
-    {"email": "amit.kumar@hdfc.com", "full_name": "Amit Kumar", "role": "AGENT", "department": "cards", "password": "hdfc123"},
-    {"email": "sneha.gupta@hdfc.com", "full_name": "Sneha Gupta", "role": "AGENT", "department": "accounts", "password": "hdfc123"},
-    {"email": "vikram.singh@hdfc.com", "full_name": "Vikram Singh", "role": "AGENT", "department": "service", "password": "hdfc123"},
-    {"email": os.getenv("DEMO_AGENT_EMAIL", ""), "full_name": "Agent Demo", "role": "AGENT", "department": "general", "password": os.getenv("DEMO_AGENT_PASSWORD", "")},
+    {"email": "rahul.sharma@unionbank.com", "full_name": "Rahul Sharma", "role": "AGENT", "department": "loans", "password": "union@123"},
+    {"email": "priya.patel@unionbank.com", "full_name": "Priya Patel", "role": "AGENT", "department": "technical", "password": "union@123"},
+    {"email": "amit.kumar@unionbank.com", "full_name": "Amit Kumar", "role": "AGENT", "department": "cards", "password": "union@123"},
+    {"email": "sneha.gupta@unionbank.com", "full_name": "Sneha Gupta", "role": "AGENT", "department": "accounts", "password": "union@123"},
+    {"email": "vikram.singh@unionbank.com", "full_name": "Vikram Singh", "role": "AGENT", "department": "service", "password": "union@123"},
 ]
 
 Base.metadata.create_all(bind=engine)
@@ -70,7 +69,7 @@ try:
         print(f"Seeded {u['role']} [{u['department']}]: {u['email']} ({u['full_name']})")
 
     db.commit()
-    print("Done. Total agents: 5 specialist + 1 demo.")
+    print("Done. Total agents: 5 specialist (Union Bank).")
 except Exception as e:
     db.rollback()
     print(f"Error: {e}")
