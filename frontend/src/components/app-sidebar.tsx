@@ -56,6 +56,7 @@ const ITEMS_BY_ROLE: Record<string, NavItem[]> = {
   AGENT: [
     { name: 'Dashboard', icon: LayoutDashboard, route: 'dashboard' },
     { name: 'My Queue', icon: ListTodo, badgeKey: 'complaints', route: 'complaints' },
+    { name: 'AI Pipeline', icon: Layers, route: 'pipeline' },
     { name: 'AI Drafts', icon: Sparkles, route: 'ai-drafts' },
     { name: '360° View', icon: Eye, route: '360-view' },
     { name: 'Search', icon: Search, route: 'search' },
@@ -63,6 +64,7 @@ const ITEMS_BY_ROLE: Record<string, NavItem[]> = {
   SUPERVISOR: [
     { name: 'Dashboard', icon: LayoutDashboard, route: 'dashboard' },
     { name: 'All Complaints', icon: ListTodo, badgeKey: 'complaints', route: 'complaints' },
+    { name: 'AI Pipeline', icon: Layers, route: 'pipeline' },
     { name: 'Escalations', icon: ShieldAlert, badgeKey: 'escalations', route: 'escalations' },
     { name: 'SLA Breaches', icon: Activity, badgeKey: 'slaBreaches', route: 'sla-breaches' },
     { name: 'Trends', icon: TrendingUp, route: 'trends' },
@@ -71,6 +73,7 @@ const ITEMS_BY_ROLE: Record<string, NavItem[]> = {
   ],
   COMPLIANCE: [
     { name: 'Dashboard', icon: LayoutDashboard, route: 'dashboard' },
+    { name: 'AI Pipeline', icon: Layers, route: 'pipeline' },
     { name: 'Regulatory Reports', icon: FileWarning, route: 'regulatory' },
     { name: 'SLA Breaches', icon: Activity, badgeKey: 'slaBreaches', route: 'sla-breaches' },
     { name: 'Root Cause', icon: FileWarning, route: 'root-cause' },

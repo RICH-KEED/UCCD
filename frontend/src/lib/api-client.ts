@@ -1,4 +1,5 @@
 import type {
+  AgentListItem,
   AgentLoad,
   CategoryBreakdown,
   ChannelDistribution,
@@ -240,6 +241,14 @@ export const api = {
 
   getAgentLoad() {
     return request<AgentLoad>('/api/v1/agents/load')
+  },
+
+  getAgentList() {
+    return request<{ status: string; agents: AgentListItem[] }>('/api/v1/agents/list')
+  },
+
+  getPipelineRuns(limit = 20) {
+    return request<{ status: string; runs: Record<string, unknown>[] }>(`/api/v1/pipeline/recent?limit=${limit}`)
   },
 
   getTrends(window = 7) {

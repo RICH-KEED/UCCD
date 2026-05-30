@@ -15,6 +15,7 @@ export type RoutePath =
   | 'trends'
   | 'root-cause'
   | 'regulatory'
+  | 'pipeline'
   | 'search'
   | 'settings'
   | 'not-found'
@@ -32,6 +33,7 @@ const ROUTE_TO_PATH: Record<RoutePath, string> = {
   'trends': '/trends',
   'root-cause': '/root-cause',
   'regulatory': '/regulatory',
+  'pipeline': '/pipeline',
   'search': '/search',
   'settings': '/settings',
   'not-found': '/not-found',

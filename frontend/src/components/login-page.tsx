@@ -4,31 +4,52 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/use-auth'
 import { useRouter } from '@/hooks/use-router'
-import type { UserRole } from '@/types/complaint'
+import type { UserRole, AgentListItem } from '@/types/complaint'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { User, LayoutDashboard, Shield, Eye, EyeOff, Loader2, Layers, Clock } from 'lucide-react'
 
-const rolesConfig: { role: UserRole; label: string; email: string; icon: React.ReactNode }[] = [
-  { role: 'AGENT', label: 'Agent', email: 'agent@example.com', icon: <User className="h-4 w-4" /> },
-  { role: 'SUPERVISOR', label: 'Supervisor', email: 'supervisor@example.com', icon: <LayoutDashboard className="h-4 w-4" /> },
-  { role: 'COMPLIANCE', label: 'Compliance', email: 'compliance@example.com', icon: <Shield className="h-4 w-4" /> },
+const rolesConfig: { role: UserRole; label: string; icon: React.ReactNode }[] = [
+  { role: 'AGENT', label: 'Agent', icon: <User className="h-4 w-4" /> },
+  { role: 'SUPERVISOR', label: 'Supervisor', icon: <LayoutDashboard className="h-4 w-4" /> },
+  { role: 'COMPLIANCE', label: 'Compliance', icon: <Shield className="h-4 w-4" /> },
 ]
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
 
 export function LoginPage() {
   const { login, isAuthenticated, user } = useAuth()
   const { navigate } = useRouter()
 
   const [selectedRole, setSelectedRole] = useState<UserRole>('AGENT')
-  const [email, setEmail] = useState('agent@example.com')
-  const [password, setPassword] = useState('Test@123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [agents, setAgents] = useState<AgentListItem[]>([])
+  const [loadingAgents, setLoadingAgents] = useState(false)
 
-  // Use useEffect to avoid setState during render
+  useEffect(() => {
+    if (selectedRole === 'AGENT') {
+      setLoadingAgents(true)
+      fetch(`${API_BASE_URL}/api/v1/agents/list`)
+        .then((r) => r.json())
+        .then((data) => {
+          setAgents(data.agents ?? [])
+          setEmail('')
+          setPassword('')
+        })
+        .catch(() => setAgents([]))
+        .finally(() => setLoadingAgents(false))
+    } else {
+      setEmail('')
+      setPassword('')
+    }
+  }, [selectedRole])
+
   useEffect(() => {
     if (isAuthenticated && user) {
       navigate('dashboard')
@@ -39,9 +60,8 @@ export function LoginPage() {
     return null
   }
 
-  const handleRoleSelect = (role: UserRole, presetEmail: string) => {
+  const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role)
-    setEmail(presetEmail)
     setError('')
   }
 
@@ -65,7 +85,6 @@ export function LoginPage() {
     <div className="flex h-screen overflow-hidden">
       {/* LEFT PANEL */}
       <div className="w-1/2 h-full relative overflow-hidden pt-12 pl-[90px] pr-[70px] flex flex-col bg-secondary">
-        {/* Decorative shapes */}
         <div className="absolute top-20 -left-20 w-[350px] h-[280px] rounded-[40%_60%_50%_50%] bg-primary/12 -rotate-15" />
         <div className="absolute -top-24 -right-20 w-[400px] h-[400px] rounded-full bg-primary/12" />
         <div className="absolute top-[400px] -right-10 w-[180px] h-[180px] rounded-full border border-secondary-foreground/10" />
@@ -73,7 +92,6 @@ export function LoginPage() {
         <div className="absolute -bottom-16 right-[120px] w-[350px] h-[350px] rounded-full border border-secondary-foreground/7" />
 
         <div className="relative z-1 flex flex-col flex-1">
-          {/* TOP BLOCK */}
           <div className="flex items-center justify-between mt-6 gap-12">
             <div className="flex flex-col">
               <h1 className="text-[27px] font-bold leading-tight text-secondary-foreground">
@@ -83,7 +101,6 @@ export function LoginPage() {
                 UCCD OmniResol processes every complaint through 7 AI agents for instant triage and routing.
               </p>
             </div>
-            {/* Phone illustration */}
             <div className="relative w-[140px] h-[200px] flex-shrink-0">
               <div className="absolute -top-6 -left-9 w-[210px] h-[250px] rounded-full bg-primary/6" />
               <div className="w-[140px] h-[200px] border-[5px] border-primary rounded-xl bg-secondary flex flex-col items-center pt-7 gap-[18px]">
@@ -99,9 +116,7 @@ export function LoginPage() {
             </div>
           </div>
 
-          {/* MIDDLE BLOCK */}
           <div className="flex items-center mt-14 gap-11">
-            {/* Monitor illustration */}
             <div className="relative w-[180px] h-[160px] flex-shrink-0">
               <div className="w-[180px] h-[130px] border-[6px] border-primary rounded-lg bg-secondary flex items-center justify-center">
                 <div className="w-[85px] h-[75px] bg-destructive rounded-md flex items-center justify-center">
@@ -121,10 +136,8 @@ export function LoginPage() {
             </div>
           </div>
 
-          {/* DIVIDER */}
           <div className="mt-10 h-px w-[540px] bg-secondary-foreground/15 self-center" />
 
-          {/* FOOTER MESSAGE */}
           <p className="mt-6 text-base leading-relaxed text-muted-foreground max-w-[480px] text-center self-center">
             Your data is secured with enterprise-grade encryption. All complaint records are fully audit-trailed and compliant with regulatory standards.
           </p>
@@ -132,7 +145,7 @@ export function LoginPage() {
           <Button
             variant="outline"
             className="mt-5 w-[300px] h-[42px] rounded-lg border-secondary-foreground/80 text-secondary-foreground font-semibold self-center bg-transparent hover:bg-secondary-foreground/8"
-            onClick={() => window.open('https://omniresol.tech', '_blank')}
+            onClick={() => window.open('https://omniresol.vercel.app/', '_blank')}
           >
             Learn About OmniResol Platform
           </Button>
@@ -172,10 +185,7 @@ export function LoginPage() {
               {/* ROLE TABS */}
               <Tabs
                 value={selectedRole}
-                onValueChange={(value) => {
-                  const cfg = rolesConfig.find((r) => r.role === value)
-                  if (cfg) handleRoleSelect(cfg.role, cfg.email)
-                }}
+                onValueChange={(value) => handleRoleSelect(value as UserRole)}
                 className="mt-5"
               >
                 <TabsList className="relative h-auto w-full gap-0.5 bg-transparent p-0 before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border">
@@ -202,20 +212,49 @@ export function LoginPage() {
                     exit={{ opacity: 0, y: -8, scale: 0.985, filter: 'blur(5px)' }}
                     transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
                   >
-                    <div className="mb-3.5">
-                      <Label className="text-[15px] font-semibold text-foreground mb-2 block">Email Address</Label>
-                      <div className="relative">
-                        <Input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="Enter your email"
-                          className="h-12 rounded-lg pr-11 transition-shadow duration-300 focus-visible:shadow-[0_0_0_4px_color-mix(in_oklch,var(--primary)_14%,transparent)]"
-                          required
-                        />
-                        <User className="absolute right-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-muted-foreground pointer-events-none" />
+                    {selectedRole === 'AGENT' ? (
+                      <div className="mb-4">
+                        <Label className="text-[15px] font-semibold text-foreground mb-2 block">Select Agent</Label>
+                        {loadingAgents ? (
+                          <div className="h-12 rounded-lg border border-input bg-muted flex items-center justify-center text-sm text-muted-foreground">
+                            Loading agents...
+                          </div>
+                        ) : (
+                          <select
+                            value={email}
+                            onChange={(e) => {
+                              setEmail(e.target.value)
+                              setPassword('')
+                              setError('')
+                            }}
+                            required
+                            className="flex h-12 w-full rounded-lg border border-input bg-background px-4 py-2 text-sm ring-offset-background transition-shadow duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="" disabled>Choose an agent...</option>
+                            {agents.map((a) => (
+                              <option key={a.user_id} value={a.email}>
+                                {a.full_name} ({a.email})
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
-                    </div>
+                    ) : (
+                      <div className="mb-3.5">
+                        <Label className="text-[15px] font-semibold text-foreground mb-2 block">Email Address</Label>
+                        <div className="relative">
+                          <Input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter your email"
+                            className="h-12 rounded-lg pr-11 transition-shadow duration-300 focus-visible:shadow-[0_0_0_4px_color-mix(in_oklch,var(--primary)_14%,transparent)]"
+                            required
+                          />
+                          <User className="absolute right-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-muted-foreground pointer-events-none" />
+                        </div>
+                      </div>
+                    )}
 
                     <div className="mb-3">
                       <Label className="text-[15px] font-semibold text-foreground mb-2 block">Password</Label>

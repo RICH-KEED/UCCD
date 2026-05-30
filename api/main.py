@@ -15,6 +15,7 @@ from api.routes.history import router as history_router
 from api.routes.aliases import router as aliases_router
 from api.routes.regulatory import router as regulatory_router
 from api.routes.webhooks import router as webhooks_router
+from api.routes.pipeline import router as pipeline_router
 from apscheduler.schedulers.background import BackgroundScheduler
 from services.sla_service import check_all_sla
 from services.regulatory_service import check_all_regulatory
@@ -130,6 +131,7 @@ app.include_router(history_router)
 app.include_router(aliases_router)
 app.include_router(regulatory_router)
 app.include_router(webhooks_router)
+app.include_router(pipeline_router)
 app.include_router(ws_router, prefix="/api/v1")
 
 @app.get("/api/health")

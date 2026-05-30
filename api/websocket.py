@@ -68,6 +68,29 @@ def broadcast_agent_overload(agent_email: str, active_tickets: int, capacity: in
         "capacity": capacity,
     })
 
+
+def broadcast_pipeline_stage(complaint_id: str, pipeline_run_id: str, stage: str, status: str, data: dict = None, elapsed_ms: float = None):
+    broadcast_event({
+        "type": "pipeline_stage_completed",
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "stage": stage,
+        "status": status,
+        "complaint_id": complaint_id,
+        "pipeline_run_id": pipeline_run_id,
+        "data": data or {},
+        "elapsed_ms": round(elapsed_ms, 1) if elapsed_ms else None,
+    })
+
+
+def broadcast_pipeline_completed(complaint_id: str, pipeline_run_id: str, assigned_to: str = None):
+    broadcast_event({
+        "type": "pipeline_completed",
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "complaint_id": complaint_id,
+        "pipeline_run_id": pipeline_run_id,
+        "assigned_to": assigned_to,
+    })
+
 @router.websocket("/ws/supervisor")
 async def supervisor_ws(websocket: WebSocket):
     await manager.connect(websocket)

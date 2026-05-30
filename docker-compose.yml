@@ -1,7 +1,7 @@
 services:
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
+    image: confluentinc/cp-zookeeper:7.6.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -16,7 +16,7 @@ services:
       - uccd_net
 
   kafka:
-    image: confluentinc/cp-kafka:7.5.0
+    image: confluentinc/cp-kafka:7.6.0
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -87,6 +87,24 @@ services:
       - uccd_net
     profiles:
       - whatsapp
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./dashboard-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./dashboard:/usr/share/nginx/html:ro
+    networks:
+      - uccd_net
+    restart: unless-stopped
+
+  alpine:
+    image: alpine:latest
+    command: tail -f /dev/null
+    networks:
+      - uccd_net
+    restart: unless-stopped
 
 volumes:
   redis_data:

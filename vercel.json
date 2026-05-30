@@ -1,12 +1,6 @@
 {
-  "framework": "vite",
-  "buildCommand": "cd frontend && npm install && npm run build",
+  "framework": "nextjs",
+  "buildCommand": "cd frontend && npm run build",
   "installCommand": "cd frontend && npm install",
-  "outputDirectory": "frontend/dist",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  "outputDirectory": "frontend/.next"
 }

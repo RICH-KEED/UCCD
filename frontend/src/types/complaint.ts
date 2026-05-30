@@ -14,6 +14,12 @@ export interface LoginRequest {
   password: string
 }
 
+export interface AgentListItem {
+  email: string
+  full_name: string
+  user_id: string
+}
+
 export interface Complaint {
   id: string
   status: string

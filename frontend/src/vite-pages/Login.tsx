@@ -1,18 +1,18 @@
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../auth/AuthContext'
-import type { UserRole } from '../types/complaint'
+import type { UserRole, AgentListItem } from '../types/complaint'
+import { API_BASE_URL } from '../api/client'
 
 function redirectFor(_role: string) {
   return '/app/dashboard'
 }
 
-const rolesConfig: { role: UserRole; label: string; email: string; icon: ReactNode }[] = [
+const rolesConfig: { role: UserRole; label: string; icon: ReactNode }[] = [
   {
     role: 'AGENT',
     label: 'Agent',
-    email: 'agent@example.com',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="8" r="4" />
@@ -23,7 +23,6 @@ const rolesConfig: { role: UserRole; label: string; email: string; icon: ReactNo
   {
     role: 'SUPERVISOR',
     label: 'Supervisor',
-    email: 'supervisor@example.com',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -34,7 +33,6 @@ const rolesConfig: { role: UserRole; label: string; email: string; icon: ReactNo
   {
     role: 'COMPLIANCE',
     label: 'Compliance',
-    email: 'compliance@example.com',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -279,19 +277,38 @@ export function Login() {
   const location = useLocation()
 
   const [selectedRole, setSelectedRole] = useState<UserRole>('AGENT')
-  const [email, setEmail] = useState('agent@example.com')
-  const [password, setPassword] = useState('Test@123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [agents, setAgents] = useState<AgentListItem[]>([])
+  const [loadingAgents, setLoadingAgents] = useState(false)
+
+  useEffect(() => {
+    if (selectedRole === 'AGENT') {
+      setLoadingAgents(true)
+      fetch(`${API_BASE_URL}/api/v1/agents/list`)
+        .then((r) => r.json())
+        .then((data) => {
+          setAgents(data.agents ?? [])
+          setEmail('')
+          setPassword('')
+        })
+        .catch(() => setAgents([]))
+        .finally(() => setLoadingAgents(false))
+    } else {
+      setEmail('')
+      setPassword('')
+    }
+  }, [selectedRole])
 
   if (isAuthenticated && user) {
     return <Navigate to={redirectFor(user.role)} replace />
   }
 
-  const handleRoleSelect = (role: UserRole, presetEmail: string) => {
+  const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role)
-    setEmail(presetEmail)
     setError('')
   }
 
@@ -329,7 +346,6 @@ export function Login() {
           flexDirection: 'column',
         }}
       >
-        {/* Decorative shapes */}
         <div style={{
           position: 'absolute',
           top: 80,
@@ -377,10 +393,7 @@ export function Login() {
           border: '1px solid rgba(255,255,255,.05)',
         }} />
 
-        {/* Content */}
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1 }}>
-
-          {/* TOP BLOCK */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -417,7 +430,6 @@ export function Login() {
             <LeftPanelPhone />
           </div>
 
-          {/* MIDDLE BLOCK */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -450,7 +462,6 @@ export function Login() {
             </div>
           </div>
 
-          {/* DIVIDER */}
           <div style={{
             marginTop: 50,
             height: 1,
@@ -459,7 +470,6 @@ export function Login() {
             alignSelf: 'center',
           }} />
 
-          {/* FOOTER MESSAGE */}
           <p style={{
             marginTop: 30,
             fontSize: 16,
@@ -472,10 +482,9 @@ export function Login() {
             Your data is secured with enterprise-grade encryption. All complaint records are fully audit-trailed and compliant with regulatory standards.
           </p>
 
-          {/* CTA BUTTON */}
           <button
             type="button"
-            onClick={() => window.open('https://omniresol.tech', '_blank')}
+            onClick={() => window.open('https://omniresol.vercel.app/', '_blank')}
             style={{
               marginTop: 22,
               width: 300,
@@ -527,7 +536,6 @@ export function Login() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
             >
-              {/* WELCOME TITLE */}
               <h2 style={{
                 fontSize: 26,
                 fontWeight: 700,
@@ -538,7 +546,6 @@ export function Login() {
                 Welcome to UCCD
               </h2>
 
-              {/* SUBTITLE + LOGOS */}
               <div style={{ marginBottom: 10 }}>
                 <span style={{
                   fontSize: 11,
@@ -563,10 +570,7 @@ export function Login() {
                     fontWeight: 600,
                     color: '#2F5BAA',
                   }}>
-                    <div style={{
-                      display: 'flex',
-                      gap: 2,
-                    }}>
+                    <div style={{ display: 'flex', gap: 2 }}>
                       <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#2A89F8', display: 'inline-block' }} />
                       <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#2A89F8', display: 'inline-block' }} />
                       <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#2A89F8', display: 'inline-block' }} />
@@ -597,13 +601,13 @@ export function Login() {
               {/* ROLE TABS */}
               <div style={{ marginTop: 30 }}>
                 <div style={{ display: 'flex', gap: 50 }}>
-                  {rolesConfig.map(({ role, label, email: presetEmail }) => {
+                  {rolesConfig.map(({ role, label }) => {
                     const isActive = selectedRole === role
                     return (
                       <button
                         key={role}
                         type="button"
-                        onClick={() => handleRoleSelect(role, presetEmail)}
+                        onClick={() => handleRoleSelect(role)}
                         style={{
                           background: 'none',
                           border: 'none',
@@ -646,121 +650,122 @@ export function Login() {
                 <div style={{ borderBottom: '1px solid #E5E5E5', marginTop: -1 }} />
               </div>
 
-{/* DEMO ACCESS BOX (like QR login) */}
-<div
-  onClick={() => {
-    const cfg = rolesConfig.find((r) => r.role === selectedRole)
-    if (cfg) {
-      setEmail(cfg.email)
-      setPassword('demo123')
-    }
-  }}
-  style={{
-    width: '100%',
-    height: 80,
-    border: '1px solid #E3E3E3',
-    borderRadius: 12,
-    background: 'white',
-    padding: '16px 20px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 28,
-    cursor: 'pointer',
-    transition: 'border-color .15s, box-shadow .15s',
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.borderColor = '#2443FF'
-    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(36,67,255,.06)'
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.borderColor = '#E3E3E3'
-    e.currentTarget.style.boxShadow = 'none'
-  }}
->
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: '50%',
-                    background: '#EEF2FA',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2443FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 17, fontWeight: 600, color: '#1E1E1E' }}>Demo Access</div>
-                    <div style={{ fontSize: 13, color: '#666', marginTop: 2 }}>Pre-filled credentials available</div>
-                  </div>
-                </div>
-                <span style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: '#22C55E',
-                  background: '#ECFDF5',
-                  padding: '4px 10px',
-                  borderRadius: 20,
-                  letterSpacing: '.5px',
-                }}>
-                  DEMO
-                </span>
-              </div>
-
               {/* FORM */}
-              <form onSubmit={handleSubmit} style={{ marginTop: 26 }}>
-                {/* EMAIL FIELD */}
-                <div style={{ marginBottom: 18 }}>
-                  <label style={{
-                    fontSize: 15,
-                    fontWeight: 600,
-                    color: '#222',
-                    display: 'block',
-                    marginBottom: 8,
-                  }}>
-                    Email Address
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      style={{
+              <form onSubmit={handleSubmit} style={{ marginTop: 28 }}>
+                {selectedRole === 'AGENT' ? (
+                  <div style={{ marginBottom: 18 }}>
+                    <label style={{
+                      fontSize: 15,
+                      fontWeight: 600,
+                      color: '#222',
+                      display: 'block',
+                      marginBottom: 8,
+                    }}>
+                      Select Agent
+                    </label>
+                    {loadingAgents ? (
+                      <div style={{
                         width: '100%',
                         height: 48,
                         borderRadius: 10,
                         border: '1px solid #DADADA',
-                        background: 'white',
-                        paddingLeft: 15,
-                        paddingRight: 45,
-                        fontSize: 14,
-                        color: '#1E1E1E',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                        transition: 'border-color .2s',
-                      }}
-                      onFocus={(e) => { e.currentTarget.style.borderColor = '#2443FF' }}
-                      onBlur={(e) => { e.currentTarget.style.borderColor = '#DADADA' }}
-                      required
-                    />
-                    <div style={{
-                      position: 'absolute',
-                      right: 15,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      pointerEvents: 'none',
+                        background: '#F5F5F5',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 13,
+                        color: '#999',
+                      }}>
+                        Loading agents...
+                      </div>
+                    ) : (
+                      <select
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value)
+                          setPassword('')
+                          setError('')
+                        }}
+                        required
+                        style={{
+                          width: '100%',
+                          height: 48,
+                          borderRadius: 10,
+                          border: '1px solid #DADADA',
+                          background: 'white',
+                          paddingLeft: 15,
+                          paddingRight: 40,
+                          fontSize: 14,
+                          color: '#1E1E1E',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                          transition: 'border-color .2s',
+                          appearance: 'none',
+                          WebkitAppearance: 'none',
+                          cursor: 'pointer',
+                        }}
+                        onFocus={(e) => { e.currentTarget.style.borderColor = '#2443FF' }}
+                        onBlur={(e) => { e.currentTarget.style.borderColor = '#DADADA' }}
+                      >
+                        <option value="" disabled>Choose an agent...</option>
+                        {agents.map((a) => (
+                          <option key={a.user_id} value={a.email}>
+                            {a.full_name} ({a.email})
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: 18 }}>
+                    <label style={{
+                      fontSize: 15,
+                      fontWeight: 600,
+                      color: '#222',
+                      display: 'block',
+                      marginBottom: 8,
                     }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="8" r="4" />
-                        <path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
-                      </svg>
+                      Email Address
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        style={{
+                          width: '100%',
+                          height: 48,
+                          borderRadius: 10,
+                          border: '1px solid #DADADA',
+                          background: 'white',
+                          paddingLeft: 15,
+                          paddingRight: 45,
+                          fontSize: 14,
+                          color: '#1E1E1E',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                          transition: 'border-color .2s',
+                        }}
+                        onFocus={(e) => { e.currentTarget.style.borderColor = '#2443FF' }}
+                        onBlur={(e) => { e.currentTarget.style.borderColor = '#DADADA' }}
+                        required
+                      />
+                      <div style={{
+                        position: 'absolute',
+                        right: 15,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        pointerEvents: 'none',
+                      }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="8" r="4" />
+                          <path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
+                        </svg>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* PASSWORD FIELD */}
                 <div style={{ marginBottom: 6 }}>
@@ -829,10 +834,6 @@ export function Login() {
                   </div>
                 </div>
 
-                <div style={{ fontSize: 12, color: '#999', marginTop: 4, marginLeft: 2 }}>
-                  Demo password: Test@123
-                </div>
-
                 {/* ERROR */}
                 {error && (
                   <motion.div
@@ -852,43 +853,6 @@ export function Login() {
                   </motion.div>
                 )}
 
-                {/* HELPER LINKS */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, marginBottom: 22 }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const cfg = rolesConfig.find((r) => r.role === selectedRole)
-                      if (cfg) { setEmail(cfg.email); setPassword('') }
-                    }}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: '#2443FF',
-                      cursor: 'pointer',
-                      padding: 0,
-                    }}
-                  >
-                    Reset Demo Email
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPassword('demo123')}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: '#2443FF',
-                      cursor: 'pointer',
-                      padding: 0,
-                    }}
-                  >
-                    Quick-fill Password
-                  </button>
-                </div>
-
                 {/* SUBMIT BUTTON */}
                 <button
                   type="submit"
@@ -905,6 +869,7 @@ export function Login() {
                     cursor: isSubmitting ? 'not-allowed' : 'pointer',
                     opacity: isSubmitting ? 0.7 : 1,
                     transition: 'background .2s',
+                    marginTop: 22,
                   }}
                   onMouseEnter={(e) => {
                     if (!isSubmitting) e.currentTarget.style.background = '#1D36D8'
@@ -927,7 +892,6 @@ export function Login() {
                 </button>
               </form>
 
-              {/* SECURITY CARD */}
               <div style={{ marginTop: 30 }}>
                 <SecurityCard />
               </div>
@@ -936,7 +900,6 @@ export function Login() {
         </div>
       </div>
 
-      {/* Spinner keyframe */}
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }

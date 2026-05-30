@@ -12,6 +12,7 @@ import { Trends } from './vite-pages/Trends'
 import { RootCause } from './vite-pages/RootCause'
 import { RegulatoryReports } from './vite-pages/RegulatoryReports'
 import { SearchPage } from './vite-pages/SearchPage'
+import { PipelineShowcase } from './vite-pages/PipelineShowcase'
 import { ComplaintDetail } from './vite-pages/ComplaintDetail'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import { NotFound } from './components/uccd/NotFound'
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="trends" element={<Trends />} />
           <Route path="root-cause" element={<RootCause />} />
           <Route path="regulatory" element={<RegulatoryReports />} />
+          <Route path="pipeline" element={<PipelineShowcase />} />
           <Route path="search" element={<SearchPage />} />
         </Route>
 
