@@ -69,5 +69,5 @@ Use these default credentials to explore the platform:
 
 | Role | Email | Password |
 | :--- | :--- | :--- |
-| **Agent** | `agent@example.com` | `demo123` *(or the password set in your .env)* |
-| **Supervisor** | `supervisor@example.com` | `demo123` *(or the password set in your .env)* |
+| **Agent** | `agent@example.com` | `Test@123` *(or the password set in your .env)* |
+| **Supervisor** | `supervisor@example.com` | `Test@123` *(or the password set in your .env)* |

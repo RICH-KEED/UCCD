@@ -11,7 +11,7 @@ load_dotenv()
 class EmailSettings(BaseModel):
     mailgun_api_key: str = ""
     mailgun_domain: str = ""
-    from_address: str = "complaints@abhineet.net"
+    from_address: str = "support@unionbankofindia.com"
     inbound_webhook_key: str = ""
     enabled: bool = False
 
@@ -27,10 +27,11 @@ class TwitterSettings(BaseModel):
     username: str = ""
     password: str = ""
     email: str = ""
+    auth_token: str = ""
     monitor_mentions: bool = True
 
     def is_configured(self) -> bool:
-        return bool(self.username and self.password)
+        return bool(self.username and (self.password or self.auth_token))
 
 
 class InstagramSettings(BaseModel):
@@ -96,7 +97,7 @@ class Settings(BaseModel):
             email=EmailSettings(
                 mailgun_api_key=os.getenv("MAILGUN_API_KEY", ""),
                 mailgun_domain=os.getenv("MAILGUN_DOMAIN", ""),
-                from_address=os.getenv("EMAIL_FROM_ADDRESS", "complaints@abhineet.net"),
+                from_address=os.getenv("EMAIL_FROM_ADDRESS", "support@unionbankofindia.com"),
                 inbound_webhook_key=os.getenv("MAILGUN_INBOUND_WEBHOOK_KEY", ""),
                 enabled=bool(os.getenv("MAILGUN_API_KEY") and os.getenv("MAILGUN_DOMAIN")),
             ),
@@ -107,6 +108,7 @@ class Settings(BaseModel):
                 username=os.getenv("TWITTER_USERNAME", ""),
                 password=os.getenv("TWITTER_PASSWORD", ""),
                 email=os.getenv("TWITTER_EMAIL", ""),
+                auth_token=os.getenv("TWITTER_AUTH_TOKEN", ""),
                 monitor_mentions=os.getenv("TWITTER_MONITOR_MENTIONS", "true").lower() != "false",
             ),
             instagram=InstagramSettings(

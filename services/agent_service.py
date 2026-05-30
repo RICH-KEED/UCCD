@@ -157,4 +157,9 @@ def check_agent_loads(db: Session) -> list[dict]:
             continue
         if count > MAX_TICKETS_PER_AGENT:
             overloaded.append({"agent": agent, "active_tickets": count, "capacity": MAX_TICKETS_PER_AGENT})
+            from api.websocket import broadcast_agent_overload
+            try:
+                broadcast_agent_overload(agent, count, MAX_TICKETS_PER_AGENT)
+            except Exception:
+                pass
     return overloaded

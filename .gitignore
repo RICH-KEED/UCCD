@@ -29,6 +29,9 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Session/auth token files
+*.tw_session
+
 # Frontend
 frontend/node_modules/
 frontend/dist/

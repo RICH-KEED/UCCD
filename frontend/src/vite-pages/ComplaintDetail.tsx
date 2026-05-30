@@ -4,6 +4,17 @@ import { api } from '../api/client'
 import { AppSidebar } from '../layout/AppSidebar'
 import { useWebSocket } from '../hooks/useWebSocket'
 import type { Complaint, HistoryEvent } from '../types/complaint'
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+
+const getEmotionValue = (emotion: string): number => {
+  const normalized = (emotion || '').toLowerCase()
+  if (['hopeful', 'positive', 'happy', 'satisfied', 'relieved'].includes(normalized)) return 1.0
+  if (['neutral', 'steady', 'calm'].includes(normalized)) return 0.0
+  if (['frustrated', 'anxious', 'concerned', 'worried', 'stressed', 'disappointed'].includes(normalized)) return -0.5
+  if (['angry', 'hostile', 'irate', 'furious'].includes(normalized)) return -1.0
+  return 0.0
+}
+
 
 const severityLevels = (score: number | null | undefined) => {
   if (score === null || score === undefined) return { label: 'Low', color: '#10B981', bg: 'rgba(16,185,129,0.1)' }
@@ -615,33 +626,77 @@ export function ComplaintDetail() {
                 Customer Emotion Arc
               </h3>
 
-              {complaint.emotion_arc && typeof complaint.emotion_arc === 'object' ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
-                    <div>
-                      <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>Initial</div>
-                      <div style={{ fontWeight: 600, color: '#ef4444' }}>
-                        {String((complaint.emotion_arc as any).initial || 'Neutral').toUpperCase()}
+              {complaint.emotion_arc && typeof complaint.emotion_arc === 'object' ? (() => {
+                const arc = complaint.emotion_arc as any;
+                const initialEmotion = String(arc.initial || 'Neutral');
+                const currentEmotion = String(arc.current || 'Neutral');
+                const initialVal = getEmotionValue(initialEmotion);
+                const currentVal = getEmotionValue(currentEmotion);
+                const emotionData = [
+                  { name: 'Initial', score: initialVal, label: initialEmotion },
+                  { name: 'Current', score: currentVal, label: currentEmotion }
+                ];
+                const isPositiveSlope = currentVal >= initialVal;
+                const lineColor = isPositiveSlope ? '#10b981' : '#ef4444';
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>Initial</div>
+                        <div style={{ fontWeight: 600, color: '#ef4444' }}>
+                          {initialEmotion.toUpperCase()}
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', color: '#64748b', fontSize: 14 }}>
+                        ➔
+                      </div>
+
+                      <div>
+                        <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase', textAlign: 'right' }}>Current</div>
+                        <div style={{ fontWeight: 600, color: isPositiveSlope ? '#10b981' : '#ef4444', textAlign: 'right' }}>
+                          {currentEmotion.toUpperCase()}
+                        </div>
                       </div>
                     </div>
-                    
-                    <div style={{ display: 'flex', alignItems: 'center', color: '#64748b', fontSize: 14 }}>
-                      ➔
+
+                    <div style={{ height: 80, width: '100%', background: '#1e293b', borderRadius: 8, padding: 6, border: '1px solid #334155' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={emotionData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                          <XAxis dataKey="name" hide />
+                          <YAxis domain={[-1.2, 1.2]} hide />
+                          <Tooltip
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                const item = payload[0].payload;
+                                return (
+                                  <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 6, padding: '4px 8px', fontSize: 11, color: '#f8fafc' }}>
+                                    <span style={{ fontWeight: 700 }}>{item.name}:</span> {item.label} ({item.score.toFixed(1)})
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="score"
+                            stroke={lineColor}
+                            strokeWidth={3}
+                            dot={{ r: 5, fill: lineColor, stroke: '#0f172a', strokeWidth: 2 }}
+                            activeDot={{ r: 7 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
                     </div>
 
-                    <div>
-                      <div style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase', textAlign: 'right' }}>Current</div>
-                      <div style={{ fontWeight: 600, color: '#f59e0b', textAlign: 'right' }}>
-                        {String((complaint.emotion_arc as any).current || 'Neutral').toUpperCase()}
-                      </div>
+                    <div style={{ background: '#1e293b', padding: '6px 10px', borderRadius: 6, fontSize: 11, textAlign: 'center', border: '1px solid #334155' }}>
+                      Trajectory: <strong style={{ color: '#3b82f6' }}>{String(arc.trajectory || 'Steady').toUpperCase()}</strong>
                     </div>
                   </div>
-
-                  <div style={{ background: '#1e293b', padding: '6px 10px', borderRadius: 6, fontSize: 11, textAlign: 'center', border: '1px solid #334155' }}>
-                    Trajectory: <strong style={{ color: '#3b82f6' }}>{String((complaint.emotion_arc as any).trajectory || 'Steady').toUpperCase()}</strong>
-                  </div>
-                </div>
-              ) : (
+                );
+              })() : (
                 <div style={{ color: '#64748b', fontSize: 12, fontStyle: 'italic' }}>Emotion arc analysis pending.</div>
               )}
             </div>

@@ -17,6 +17,11 @@ def run_root_cause(state: ComplaintState) -> dict:
         if count < 10:
             return {}
         else:
+            from api.websocket import broadcast_cluster_spike
+            try:
+                broadcast_cluster_spike(str(cluster_id), count)
+            except Exception:
+                pass
             return {"root_cause": f"ROOT_{cluster_id}"}
     finally:
         db.close()

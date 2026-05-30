@@ -3,21 +3,40 @@ import os
 import logging
 import threading
 import time
-from datetime import datetime, timezone
+from dataclasses import dataclass
 
 import requests
-from sqlalchemy.orm import Session
 
 from services.channels.base import BaseChannel
+from services.channels import extract_details_llm
 from api.db.session import get_db
-from api.models.complaint import Complaint
 from api.models.outbound_message import OutboundMessage
-from agents.orchestrator import run_pipeline
-from api.websocket import broadcast_event
 
 logger = logging.getLogger(__name__)
 
 TELEGRAM_API = "https://api.telegram.org"
+
+STEPS = ["complaint", "name", "account_no", "phone", "email", "registered"]
+
+STEP_PROMPTS = {
+    "complaint": "Please describe your complaint or issue in detail.",
+    "name": "Please provide your full name.",
+    "account_no": "Please provide your account number.",
+    "phone": "Please provide your phone number.",
+    "email": "Please provide your email address.",
+}
+
+
+@dataclass
+class UserSession:
+    step: str = "complaint"
+    complaint_text: str = ""
+    name: str = ""
+    account_no: str = ""
+    phone: str = ""
+    email: str = ""
+    complaint_id: str = ""
+    chat_id: int = 0
 
 
 class TelegramChannel(BaseChannel):
@@ -32,6 +51,7 @@ class TelegramChannel(BaseChannel):
         self.api_host = api_host or os.getenv("API_HOST", "http://localhost:8000")
         self._thread: threading.Thread | None = None
         self._stop_flag = threading.Event()
+        self._sessions: dict[int, UserSession] = {}
 
     def is_configured(self) -> bool:
         return bool(self.token and self.token.strip() and self.token != "YOUR_TELEGRAM_BOT_TOKEN")
@@ -50,6 +70,141 @@ class TelegramChannel(BaseChannel):
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=5)
         logger.info("TelegramChannel stopped.")
+
+    def _send_telegram(self, chat_id: int, text: str, parse_mode: str = "Markdown") -> bool:
+        base_url = f"{TELEGRAM_API}/bot{self.token}"
+        try:
+            r = requests.post(
+                f"{base_url}/sendMessage",
+                json={"chat_id": chat_id, "text": text, "parse_mode": parse_mode},
+                timeout=10,
+            )
+            return r.status_code == 200
+        except Exception as e:
+            logger.error(f"Telegram send failed for chat {chat_id}: {e}")
+            return False
+
+    def _handle_update(self, chat_id: int, text_strip: str, base_url: str) -> None:
+        if chat_id not in self._sessions:
+            details = extract_details_llm(text_strip)
+            if details["name"] and (details["account_no"] or details["phone"] or details["email"]):
+                session = UserSession(chat_id=chat_id)
+                session.complaint_text = details["complaint_text"]
+                session.name = details["name"]
+                session.account_no = details["account_no"] or ""
+                session.phone = details["phone"] or ""
+                session.email = details["email"] or ""
+                logger.info("Telegram: extracted all details from first message, creating complaint directly.")
+                self._create_complaint_from_session(session, chat_id, base_url)
+                return
+            self._sessions[chat_id] = UserSession(chat_id=chat_id)
+            self._send_telegram(
+                chat_id,
+                "\U0001f3e6 *Welcome to Union Bank of India Support!*\n\nPlease describe your complaint or issue in detail.",
+            )
+            return
+
+        session = self._sessions[chat_id]
+
+        if text_strip.lower() == "/start":
+            self._sessions[chat_id] = UserSession(chat_id=chat_id)
+            self._send_telegram(
+                chat_id,
+                "\U0001f3e6 *Welcome to Union Bank of India Support!*\n\nPlease describe your complaint or issue in detail.",
+            )
+            return
+
+        if text_strip.lower() == "/reset":
+            self._sessions[chat_id] = UserSession(chat_id=chat_id)
+            self._send_telegram(chat_id, "\U0001f504 *Session reset.*\n\nPlease describe your complaint or issue in detail.")
+            return
+
+        if session.step == "registered":
+            self._send_telegram(
+                chat_id,
+                f"\u2705 *Your complaint is registered.*\n\n*Ticket ID:* `{session.complaint_id}`\n\nYou will be notified when it is resolved.",
+            )
+            del self._sessions[chat_id]
+            return
+
+        if session.step == "complaint":
+            session.complaint_text = text_strip
+            session.step = "name"
+            self._send_telegram(chat_id, STEP_PROMPTS["name"])
+            return
+
+        if session.step == "name":
+            session.name = text_strip
+            session.step = "account_no"
+            self._send_telegram(chat_id, STEP_PROMPTS["account_no"])
+            return
+
+        if session.step == "account_no":
+            session.account_no = text_strip
+            session.step = "phone"
+            self._send_telegram(chat_id, STEP_PROMPTS["phone"])
+            return
+
+        if session.step == "phone":
+            session.phone = text_strip
+            session.step = "email"
+            self._send_telegram(chat_id, STEP_PROMPTS["email"])
+            return
+
+        if session.step == "email":
+            session.email = text_strip
+            self._create_complaint_from_session(session, chat_id, base_url)
+
+    def _create_complaint_from_session(self, session: UserSession, chat_id: int, base_url: str) -> None:
+        payload = {
+            "customer_id": f"TG_{chat_id}",
+            "channel": "telegram",
+            "source_ref": str(chat_id),
+            "raw_text": session.complaint_text,
+        }
+
+        try:
+            res = requests.post(f"{self.api_host}/api/v1/complaints", json=payload, timeout=8)
+            if res.status_code == 201:
+                complaint_data = res.json()
+                session.complaint_id = complaint_data.get("id")
+                session.step = "registered"
+
+                self._update_complaint_details(session)
+
+                self._send_telegram(
+                    chat_id,
+                    f"\u2705 *Complaint Registered!*\n\n"
+                    f"*Ticket ID:* `{session.complaint_id}`\n"
+                    f"*Name:* {session.name}\n"
+                    f"*Account:* {session.account_no}\n"
+                    f"*Phone:* {session.phone}\n"
+                    f"*Email:* {session.email}\n\n"
+                    f"Our team is reviewing your case. You will be notified when it is resolved.",
+                )
+            else:
+                logger.warning(f"API returned status {res.status_code}: {res.text}")
+                self._send_telegram(chat_id, "\u274c Could not register your complaint. Please try again later.")
+        except Exception as api_err:
+            logger.warning(f"Failed to create complaint: {api_err}")
+            self._send_telegram(chat_id, "\u274c Could not register your complaint. Please try again later.")
+
+    def _update_complaint_details(self, session: UserSession) -> None:
+        if not session.complaint_id:
+            return
+        try:
+            res = requests.put(
+                f"{self.api_host}/api/v1/complaints/{session.complaint_id}/details",
+                json={
+                    "customer_name": session.name or None,
+                    "customer_email": session.email or None,
+                    "customer_phone": session.phone or None,
+                    "account_number": session.account_no or None,
+                },
+                timeout=10,
+            )
+        except Exception:
+            pass
 
     def _poll_updates(self) -> None:
         offset = 0
@@ -83,109 +238,16 @@ class TelegramChannel(BaseChannel):
                         continue
 
                     text_strip = text.strip()
-                    if text_strip == "/start":
-                        requests.post(
-                            f"{base_url}/sendMessage",
-                            json={
-                                "chat_id": chat_id,
-                                "text": "🏦 *Welcome to Union Bank of India Support!*\n\nPlease type your complaint or issue details below. Our AI-driven triage system will log it immediately and provide an initial assessment.",
-                                "parse_mode": "Markdown",
-                            },
-                        )
-                        continue
+                    logger.info(f"Telegram from {username} (Chat {chat_id}): '{text_strip[:40]}...'")
 
-                    logger.info(f"Telegram received ticket from {username} (Chat ID {chat_id}): '{text_strip[:40]}...'")
                     requests.post(f"{base_url}/sendChatAction", json={"chat_id": chat_id, "action": "typing"})
 
-                    payload = {
-                        "customer_id": f"TG_{chat_id}",
-                        "channel": "telegram",
-                        "source_ref": str(chat_id),
-                        "raw_text": text_strip,
-                    }
-
-                    try:
-                        res = requests.post(f"{self.api_host}/api/v1/complaints", json=payload, timeout=8)
-                        if res.status_code == 201:
-                            complaint_data = res.json()
-                            complaint_id = complaint_data.get("id")
-                            requests.post(
-                                f"{base_url}/sendMessage",
-                                json={
-                                    "chat_id": chat_id,
-                                    "text": f"🎫 *Ticket Logged!*\n\n*Ticket ID:* `{complaint_id}`\n\nOur AI triage agents are reviewing your case. We will send you an initial report and estimated resolution time shortly.",
-                                    "parse_mode": "Markdown",
-                                },
-                            )
-                        else:
-                            logger.warning(f"API returned status {res.status_code}: {res.text}")
-                            self._save_fallback_db(base_url, chat_id, text_strip)
-                    except Exception as api_err:
-                        logger.warning(f"Failed to post to API: {api_err}. Running DB write fallback...")
-                        self._save_fallback_db(base_url, chat_id, text_strip)
+                    self._handle_update(chat_id, text_strip, base_url)
 
             except Exception as e:
                 logger.error(f"Error in Telegram polling cycle: {e}")
                 time.sleep(5)
-
-    def _save_fallback_db(self, base_url: str, chat_id: int, text: str) -> None:
-        db = next(get_db())
-        try:
-            from uuid import uuid4
-
-            complaint_id = uuid4()
-            db_complaint = Complaint(
-                id=complaint_id,
-                customer_id=f"TG_{chat_id}",
-                channel="telegram",
-                source_ref=str(chat_id),
-                raw_text=text,
-                status="queued",
-                created_at=datetime.now(timezone.utc),
-            )
-            db.add(db_complaint)
-            db.commit()
-
-            requests.post(
-                f"{base_url}/sendMessage",
-                json={
-                    "chat_id": chat_id,
-                    "text": f"🎫 *Ticket Logged (DB Fallback)!*\n\n*Ticket ID:* `{complaint_id}`\n\nOur AI agents are analyzing your case.",
-                    "parse_mode": "Markdown",
-                },
-            )
-
-            broadcast_event({
-                "type": "complaint_created",
-                "ts": datetime.now(timezone.utc).isoformat(),
-                "complaint_id": str(complaint_id),
-                "status": "queued",
-                "channel": "telegram",
-                "customer_id": f"TG_{chat_id}",
-            })
-
-            threading.Thread(
-                target=run_pipeline,
-                kwargs={
-                    "complaint_id": str(complaint_id),
-                    "raw_text": text,
-                    "channel": "telegram",
-                    "customer_id": f"TG_{chat_id}",
-                },
-                daemon=True,
-            ).start()
-
-        except Exception as db_err:
-            logger.error(f"DB Fallback write failed: {db_err}")
-            requests.post(
-                f"{base_url}/sendMessage",
-                json={
-                    "chat_id": chat_id,
-                    "text": "❌ We are experiencing database issues. Your complaint could not be saved. Please try again later.",
-                },
-            )
-        finally:
-            db.close()
+            time.sleep(0.5)
 
     async def send_message(self, source_ref: str, text: str, **kwargs) -> bool:
         if not self.token:
@@ -204,20 +266,7 @@ class TelegramChannel(BaseChannel):
             return False
 
     async def format_resolution_message(self, complaint, resolution_text: str) -> str:
-        return f"Your ticket {complaint.id} has been resolved.\n\nResolution Notes:\n{resolution_text}"
-
-    async def format_triage_message(self, complaint, ai_draft: str) -> dict:
-        tier_hours = {"REGULATORY": 5, "HIGH": 24, "MEDIUM": 48, "NORMAL": 72}
-        sla_hours = tier_hours.get(complaint.sla_tier, 72)
-        msg = (
-            f"🎫 *Ticket Triage Assessment ready!*\n\n"
-            f"*Ticket ID:* `{complaint.id}`\n"
-            f"*Category:* {complaint.complaint_type or 'General'}\n"
-            f"*SLA Deadline:* {sla_hours} hours\n"
-            f"*Severity Level:* {complaint.severity_score:.2f}\n\n"
-            f"🤖 *AI Assistant's Response Draft:*\n{ai_draft}"
-        )
-        return {"text": msg, "parse_mode": "Markdown"}
+        return f"\u2705 *Your Complaint Has Been Resolved!*\n\n*Ticket ID:* `{complaint.id}`\n\n*Resolution:*\n{resolution_text}"
 
     def _log_outbound(self, source_ref: str, text: str, success: bool, error: str | None, provider_id: str | None = None) -> None:
         db = next(get_db())

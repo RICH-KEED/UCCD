@@ -146,6 +146,9 @@ async def _sarvam_llm_complete(prompt: str, max_tokens: int = 300) -> Optional[s
 
 
 def _format_email_response(text: str) -> str:
+    """Ensure the email response has proper paragraph spacing and readable
+    structure. LLMs sometimes return a wall of text; this breaks it into
+    well-spaced sections."""
     lines = [line.strip() for line in text.strip().split("\n")]
     result: list[str] = []
     prev_empty = False
@@ -155,7 +158,13 @@ def _format_email_response(text: str) -> str:
                 result.append("")
             prev_empty = True
         else:
-            result.append(line)
+            # Break very long sentences into separate lines for readability
+            if len(line) > 200 and ". " in line:
+                parts = line.replace(". ", ".\n")
+                for part in parts.split("\n"):
+                    result.append(part.strip())
+            else:
+                result.append(line)
             prev_empty = False
     return "\n".join(result).strip()
 
@@ -220,14 +229,16 @@ CRITICAL FORMATTING RULES:
             return await _translate_response(_format_email_response(sarvam_response), language)
         fallback = _format_email_response(
             "Dear Customer,\n\n"
-            "Thank you for reaching out to Union Bank of India. We sincerely apologize for the inconvenience "
-            "you are facing. To process your complaint and resolve it at the earliest, please share the "
-            "following details:\n\n"
-            "- Your full name\n"
-            "- Your account number (if applicable)\n"
-            "- Your phone number\n\n"
-            "Kindly reply to this email with the requested information.\n\n"
-            "Regards,\nUnion Bank of India Customer Support"
+            "Thank you for reaching out to Union Bank of India. We sincerely apologize "
+            "for the inconvenience you are facing.\n\n"
+            "To register your complaint and resolve it at the earliest, "
+            "please reply to this email with the following details:\n\n"
+            "  - Your full name\n"
+            "  - Your account number (if applicable)\n"
+            "  - Your phone number (for faster follow-up)\n\n"
+            "Your complaint will be prioritized as soon as we receive your response.\n\n"
+            "Regards,\n"
+            "Union Bank of India Customer Support"
         )
         return await _translate_response(fallback, language)
 
@@ -325,9 +336,14 @@ CRITICAL FORMATTING RULES:
         if sarvam_response:
             return await _translate_response(_format_email_response(sarvam_response), language)
         fallback = _format_email_response(
-            f"Thank you for your reply. To register your complaint, we still need: {missing_str}. "
-            "Please reply with these details at your earliest convenience.\n\n"
-            "Regards,\nUnion Bank of India Customer Support"
+            f"Dear Customer,\n\n"
+            f"Thank you for your reply.\n\n"
+            f"To register your complaint, we still need the following:\n\n"
+            f"  - {missing_str}\n\n"
+            f"Please reply with these details at your earliest convenience. "
+            f"We will prioritize your case as soon as we receive the complete information.\n\n"
+            f"Regards,\n"
+            f"Union Bank of India Customer Support"
         )
         return await _translate_response(fallback, language)
 
@@ -384,10 +400,13 @@ CRITICAL FORMATTING RULES:
             return await _translate_response(sarvam_response, language)
         fallback = (
             f"Dear {customer_name},\n\n"
-            f"Your complaint has been registered. Your complaint number is: {complaint_id}\n\n"
-            "A support executive will review your case and respond within the SLA period. "
-            "Thank you for your patience.\n\n"
-            "Regards,\nUnion Bank of India Customer Support"
+            f"Your complaint has been registered successfully.\n\n"
+            f"Your complaint number is: {complaint_id}\n\n"
+            f"A support executive will review your case and respond within "
+            f"the committed SLA period.\n\n"
+            f"Thank you for your patience.\n\n"
+            f"Regards,\n"
+            f"Union Bank of India Customer Support"
         )
         return await _translate_response(fallback, language)
 
@@ -400,6 +419,36 @@ async def handle_first_contact_email(
 ) -> dict:
     language = await _detect_language_via_sarvam(body_text)
     logger.info(f"New email conversation started — from={from_addr}, language={language}")
+
+    # Check if the customer already provided all the required details
+    # in their very first email. If so, skip the details-request step
+    # and create the complaint directly.
+    first_details = await _extract_details(body_text)
+    first_valid, first_missing = _validate_details(first_details)
+
+    if first_valid:
+        logger.info(
+            f"First email from {from_addr} already contains all required details — "
+            f"creating complaint directly."
+        )
+        complaint_payload = {
+            "customer_id": from_addr,
+            "channel": "email",
+            "source_ref": message_id or from_addr,
+            "raw_text": f"Subject: {subject}\n\n{body_text}",
+            "bot_slots": {
+                "email_subject": subject,
+                "message_id": message_id,
+            },
+            "language_code": language,
+            **{k: first_details.get(k) for k in CUSTOMER_DETAIL_KEYS},
+        }
+        return {
+            "action": "create_complaint",
+            "complaint_payload": complaint_payload,
+            "language": language,
+            "details": first_details,
+        }
 
     response_text = await _generate_first_response(subject, body_text, language)
 

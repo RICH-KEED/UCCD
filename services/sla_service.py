@@ -77,9 +77,38 @@ def clear_sla(complaint_id: str):
 
 
 def check_all_sla():
-    keys = r.keys("sla:*")
-    for key in keys:
-        complaint_id = key.split(":")[1]
+    meta_keys = r.keys("sla_meta:*")
+    for key in meta_keys:
+        try:
+            complaint_id = key.split(":")[1]
+        except IndexError:
+            continue
+
+        # If the SLA timer key has expired (does not exist), but metadata is still present:
+        if not r.exists(f"sla:{complaint_id}"):
+            try:
+                db = next(get_db())
+                try:
+                    complaint = db.query(Complaint).filter(Complaint.id == complaint_id).first()
+                    if complaint is not None and not complaint.sla_breached:
+                        complaint.sla_breached = True
+                        if complaint.status != "resolved":
+                            complaint.status = "escalated"
+                        db.commit()
+                        fire_sla_alert(complaint_id, "BREACHED")
+                finally:
+                    db.close()
+            except Exception as e:
+                # If DB is not configured/reachable, still allow clean up.
+                logger.warning(f"Error handling SLA breach for {complaint_id} in DB: {e}")
+                try:
+                    fire_sla_alert(complaint_id, "BREACHED")
+                except Exception:
+                    pass
+            clear_sla(complaint_id)
+            continue
+
+        # If SLA timer is still active, perform normal threshold alerts:
         status = get_sla_status(complaint_id)
         if status is None:
             continue
@@ -96,23 +125,3 @@ def check_all_sla():
         if percentage >= 90 and status["alerts"]["90%"] == "0":
             fire_sla_alert(complaint_id, "90_PERCENT")
             r.hset(f"sla_meta:{complaint_id}", "alert_90", "1")
-        
-        ttl = r.ttl(f"sla:{complaint_id}")
-        if ttl == -2:
-            clear_sla(complaint_id)
-            fire_sla_alert(complaint_id, "BREACHED")
-            try:
-                db = next(get_db())
-                try:
-                    complaint = db.query(Complaint).filter(Complaint.id == complaint_id).first()
-                    if complaint is not None:
-                        complaint.sla_breached = True
-                        if complaint.status != "resolved":
-                            complaint.status = "escalated"
-                        db.commit()
-                finally:
-                    db.close()
-            except Exception:
-                # If DB is not configured/reachable, still keep redis+ws behavior.
-                pass
-            clear_sla(complaint_id)

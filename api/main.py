@@ -57,11 +57,24 @@ def _register_channels() -> None:
     register(InstagramChannel())
 
 
+def run_check_agent_loads():
+    from api.db.session import get_db
+    from services.agent_service import check_agent_loads
+    db = next(get_db())
+    try:
+        check_agent_loads(db)
+    except Exception as e:
+        logger.warning(f"Error checking agent loads: {e}")
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     manager.set_main_loop(asyncio.get_running_loop())
     scheduler.add_job(check_all_sla, 'interval', minutes=1)
     scheduler.add_job(check_all_regulatory, 'interval', minutes=5)
+    scheduler.add_job(run_check_agent_loads, 'interval', minutes=5)
     scheduler.start()
 
     _register_channels()
