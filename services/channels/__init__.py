@@ -66,45 +66,24 @@ async def send_triage_update(complaint, ai_draft: str) -> bool:
     sla_hours = tier_hours.get(complaint.sla_tier, 72)
     sev_str = _severity_str(complaint)
 
-    if channel_name == "telegram":
-        msg = (
-            f"🎫 *Ticket Triage Assessment ready!*\n\n"
-            f"*Ticket ID:* `{complaint.id}`\n"
-            f"*Category:* {complaint.complaint_type or 'General'}\n"
-            f"*SLA Deadline:* {sla_hours} hours\n"
-            f"*Severity Level:* {sev_str}\n\n"
-            f"🤖 *AI Assistant's Response Draft:*\n{ai_draft}"
-        )
-        return await channel.send_message(complaint.source_ref, msg, parse_mode="Markdown")
-
-    if channel_name == "email":
-        msg = (
-            f"<h2>Ticket Triage Assessment</h2>"
-            f"<p><strong>Ticket ID:</strong> {complaint.id}</p>"
-            f"<p><strong>Category:</strong> {complaint.complaint_type or 'General'}</p>"
-            f"<p><strong>SLA Deadline:</strong> {sla_hours} hours</p>"
-            f"<p><strong>Severity Level:</strong> {sev_str}</p>"
-            f"<h3>AI Assistant's Response Draft</h3>"
-            f"<p>{ai_draft}</p>"
-        )
-        return await channel.send_message(complaint.source_ref, msg, subject=f"Ticket {complaint.id} — Triage Assessment")
+    if channel_name in ("instagram", "telegram"):
+        return True
 
     if channel_name == "twitter":
-        short = f"Ticket #{complaint.id} · {complaint.complaint_type or 'General'} · SLA {sla_hours}h · Severity {sev_str}"
-        return await channel.send_message(complaint.source_ref, short)
-
-    if channel_name == "instagram":
-        short = f"Ticket #{complaint.id} · {complaint.complaint_type or 'General'} · SLA {sla_hours}h · Severity {sev_str}"
-        return await channel.send_message(complaint.source_ref, short)
-
-    msg = (
-        f"Ticket Triage Assessment\n"
-        f"Ticket ID: {complaint.id}\n"
-        f"Category: {complaint.complaint_type or 'General'}\n"
-        f"SLA Deadline: {sla_hours} hours\n"
-        f"Severity Level: {sev_str}\n\n"
-        f"AI Draft:\n{ai_draft}"
-    )
+        msg = (
+            f"Ticket ID: {complaint.id}\n"
+            f"Category: {complaint.complaint_type or 'General'}\n"
+            f"SLA: {sla_hours}h | Severity: {sev_str}"
+        )
+    else:
+        msg = (
+            f"Ticket Triage Assessment\n"
+            f"Ticket ID: {complaint.id}\n"
+            f"Category: {complaint.complaint_type or 'General'}\n"
+            f"SLA Deadline: {sla_hours} hours\n"
+            f"Severity Level: {sev_str}\n\n"
+            f"AI Draft:\n{ai_draft}"
+        )
     return await channel.send_message(complaint.source_ref, msg)
 
 
