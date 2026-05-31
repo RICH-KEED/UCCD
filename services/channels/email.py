@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime, timezone
 
 import requests
@@ -42,15 +43,21 @@ class EmailChannel(BaseChannel):
         subject = kwargs.get("subject", "Union Bank of India — Support Update")
         from_addr = self._settings.from_address
 
+        # Bold any UUID in the text
+        def bold_uuids(match):
+            return f'<b>{match.group(0)}</b>'
+
+        text = re.sub(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', bold_uuids, text, flags=re.IGNORECASE)
+
         data = {
             "from": f"Union Bank of India <{from_addr}>",
             "to": source_ref,
             "subject": subject,
             "html": (
-                f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">'
+                f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:10px;">'
                 f'<div style="background:#0033a0;padding:16px;text-align:center;">'
                 f'<h2 style="color:#fff;margin:0;">Union Bank of India</h2></div>'
-                f'<div style="padding:24px;border:1px solid #ddd;white-space:pre-wrap;">{text}</div>'
+                f'<div style="padding:12px;border:1px solid #ddd;white-space:pre-wrap;">{text}</div>'
                 f'<div style="font-size:12px;color:#888;margin-top:16px;">'
                 f'This is an automated message from Union Bank of India Customer Support.</div></div>'
             ),

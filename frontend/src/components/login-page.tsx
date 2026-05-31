@@ -145,7 +145,7 @@ export function LoginPage() {
           <Button
             variant="outline"
             className="mt-5 w-[300px] h-[42px] rounded-lg border-secondary-foreground/80 text-secondary-foreground font-semibold self-center bg-transparent hover:bg-secondary-foreground/8"
-            onClick={() => window.open('https://omniresol.vercel.app/', '_blank')}
+            onClick={() => window.open('https://omniresol.me/', '_blank')}
           >
             Learn About OmniResol Platform
           </Button>

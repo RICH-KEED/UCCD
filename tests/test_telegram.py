@@ -1,13 +1,36 @@
+import json
 import threading
 import time
 from unittest.mock import MagicMock, patch
+
+import pytest
+
+
+class MockRedis:
+    def __init__(self):
+        self._store = {}
+
+    def get(self, key):
+        return self._store.get(key)
+
+    def setex(self, key, ttl, value):
+        self._store[key] = value
+
+    def delete(self, key):
+        self._store.pop(key, None)
+
+
+@pytest.fixture(autouse=True)
+def mock_redis():
+    mock_r = MockRedis()
+    with patch("services.channels.telegram.r", mock_r), patch("services.cache.r", mock_r):
+        yield mock_r
 
 
 def make_channel():
     from services.channels.telegram import TelegramChannel, UserSession
 
     channel = TelegramChannel(token="test-bot-token", api_host="http://localhost:8000")
-    channel._sessions.clear()
     return channel, UserSession
 
 
@@ -72,8 +95,9 @@ def test_describe_complaint_then_asks_name():
         t.join(timeout=5)
 
     msgs = [c for c in mock_post.call_args_list if "sendMessage" in str(c)]
-    assert len(msgs) >= 2
-    assert "full name" in str(msgs[1])
+    assert len(msgs) >= 3
+    all_text = " ".join(str(c) for c in msgs)
+    assert "full name" in all_text
 
 
 def test_full_conversation_flow():
@@ -105,23 +129,29 @@ def test_full_conversation_flow():
     send_msg_calls = [c for c in mock_post.call_args_list if "sendMessage" in str(c)]
     complaint_calls = [c for c in mock_post.call_args_list if "api/v1/complaints" in str(c)]
 
-    assert len(send_msg_calls) == 6
+    assert len(send_msg_calls) == 7
     assert "Welcome" in str(send_msg_calls[0])
-    assert "full name" in str(send_msg_calls[1])
-    assert "account number" in str(send_msg_calls[2])
-    assert "phone number" in str(send_msg_calls[3])
-    assert "email" in str(send_msg_calls[4])
+    assert "collect your details" in str(send_msg_calls[1])
+    assert "full name" in str(send_msg_calls[2])
+    assert "account number" in str(send_msg_calls[3])
+    assert "phone number" in str(send_msg_calls[4])
+    assert "email" in str(send_msg_calls[5])
     assert len(complaint_calls) == 1
 
     payload = complaint_calls[0][1]["json"]
     assert payload["raw_text"] == "My card is blocked"
     assert payload["channel"] == "telegram"
-    assert channel._sessions[999].step == "registered"
-    assert channel._sessions[999].complaint_id == "conv-123"
+
+    from services.channels.telegram import _get_tg_session
+    session = _get_tg_session(999)
+    assert session["step"] == "registered"
+    assert session["complaint_id"] == "conv-123"
 
 
 def test_after_registration_no_duplicate():
     channel, UserSession = make_channel()
+
+    from services.channels.telegram import _save_tg_session, asdict
     session = UserSession(
         step="registered",
         complaint_text="Old",
@@ -132,7 +162,7 @@ def test_after_registration_no_duplicate():
         complaint_id="existing-id",
         chat_id=999,
     )
-    channel._sessions[999] = session
+    _save_tg_session(999, asdict(session))
 
     update = _make_update(10, 999, "Any random message")
 
@@ -153,6 +183,9 @@ def test_after_registration_no_duplicate():
 
     msgs = [c for c in mock_post.call_args_list if "sendMessage" in str(c)]
     assert "registered" in str(msgs[0]).lower()
+
+    from services.channels.telegram import _get_tg_session
+    assert _get_tg_session(999) is None
 
 
 def test_session_is_isolated_per_chat():
@@ -177,9 +210,13 @@ def test_session_is_isolated_per_chat():
         channel._stop_flag.set()
         t.join(timeout=5)
 
-    assert 111 in channel._sessions
-    assert 222 in channel._sessions
-    assert channel._sessions[111].step == "name"
-    assert channel._sessions[222].step == "name"
-    assert channel._sessions[111].complaint_text == "Issue from user 111"
-    assert channel._sessions[222].complaint_text == "Issue from user 222"
+    from services.channels.telegram import _get_tg_session
+
+    s111 = _get_tg_session(111)
+    s222 = _get_tg_session(222)
+    assert s111 is not None
+    assert s222 is not None
+    assert s111["step"] == "name"
+    assert s222["step"] == "name"
+    assert s111["complaint_text"] == "Issue from user 111"
+    assert s222["complaint_text"] == "Issue from user 222"

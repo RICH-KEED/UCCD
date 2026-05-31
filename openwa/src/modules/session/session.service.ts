@@ -31,6 +31,9 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
   // In-memory map of active engine instances
   private engines: Map<string, IWhatsAppEngine> = new Map();
 
+  // In-memory map of session name to UUID
+  private sessionNameMap: Map<string, string> = new Map();
+
   // Reconnection state per session
   private reconnectStates: Map<string, ReconnectState> = new Map();
 
@@ -80,6 +83,7 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
       await engine.destroy();
     }
     this.engines.clear();
+    this.sessionNameMap.clear();
 
     // Clear all reconnect timers
     for (const [, state] of this.reconnectStates) {
@@ -88,6 +92,10 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
       }
     }
     this.reconnectStates.clear();
+  }
+
+  private resolveId(id: string): string {
+    return this.sessionNameMap.get(id) || id;
   }
 
   async create(dto: CreateSessionDto): Promise<Session> {
@@ -132,9 +140,15 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
   }
 
   async findOne(id: string): Promise<Session> {
-    const session = await this.sessionRepository.findOne({ where: { id } });
+    let session = null;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (isUuid) {
+      session = await this.sessionRepository.findOne({ where: { id } });
+    } else {
+      session = await this.sessionRepository.findOne({ where: { name: id } });
+    }
     if (!session) {
-      throw new NotFoundException(`Session with id '${id}' not found`);
+      throw new NotFoundException(`Session with id/name '${id}' not found`);
     }
     return session;
   }
@@ -149,15 +163,17 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
 
   async delete(id: string): Promise<void> {
     const session = await this.findOne(id);
+    const resolvedId = session.id;
 
     // Cancel any reconnection attempts
-    this.cancelReconnect(id);
+    this.cancelReconnect(resolvedId);
 
     // Stop engine if running
-    const engine = this.engines.get(id);
+    const engine = this.engines.get(resolvedId);
     if (engine) {
       await engine.destroy();
-      this.engines.delete(id);
+      this.engines.delete(resolvedId);
+      this.sessionNameMap.delete(session.name);
     }
 
     // Execute hook BEFORE delete so plugins can access session data
@@ -170,7 +186,7 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
         pushName: session.pushName,
       },
       {
-        sessionId: id,
+        sessionId: resolvedId,
         source: 'SessionService',
       },
     );
@@ -179,24 +195,25 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
       await manager.remove(session);
     });
     this.logger.log(`Session deleted: ${session.name}`, {
-      sessionId: id,
+      sessionId: resolvedId,
       action: 'delete',
     });
   }
 
   async start(id: string): Promise<Session> {
     const session = await this.findOne(id);
+    const resolvedId = session.id;
 
-    if (this.engines.has(id)) {
+    if (this.engines.has(resolvedId)) {
       throw new BadRequestException('Session is already started');
     }
 
     // Execute hook before starting
     await this.hookManager.execute(
       'session:starting',
-      { sessionId: id },
+      { sessionId: resolvedId },
       {
-        sessionId: id,
+        sessionId: resolvedId,
         source: 'SessionService',
       },
     );
@@ -206,15 +223,15 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
       maxReconnectAttempts?: number;
       reconnectBaseDelay?: number;
     } | null;
-    this.reconnectStates.set(id, {
+    this.reconnectStates.set(resolvedId, {
       attempts: 0,
       timer: null,
       maxAttempts: config?.maxReconnectAttempts ?? 5,
       baseDelay: config?.reconnectBaseDelay ?? 5000,
     });
 
-    await this.initializeEngine(id, session);
-    return this.findOne(id);
+    await this.initializeEngine(resolvedId, session);
+    return this.findOne(resolvedId);
   }
 
   private async initializeEngine(id: string, session: Session): Promise<void> {
@@ -230,6 +247,7 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
       proxyType: session.proxyType || undefined,
     });
     this.engines.set(id, engine);
+    this.sessionNameMap.set(session.name, id);
 
     await engine.initialize({
       onQRCode: (): void => {
@@ -408,38 +426,42 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
   }
 
   private cancelReconnect(id: string): void {
-    const state = this.reconnectStates.get(id);
+    const resolvedId = this.resolveId(id);
+    const state = this.reconnectStates.get(resolvedId);
     if (state?.timer) {
       clearTimeout(state.timer);
       state.timer = null;
     }
-    this.reconnectStates.delete(id);
+    this.reconnectStates.delete(resolvedId);
   }
 
   async stop(id: string): Promise<Session> {
     const session = await this.findOne(id);
+    const resolvedId = session.id;
 
     // Cancel any reconnection attempts
-    this.cancelReconnect(id);
+    this.cancelReconnect(resolvedId);
 
-    const engine = this.engines.get(id);
+    const engine = this.engines.get(resolvedId);
 
     if (engine) {
       await engine.disconnect();
-      this.engines.delete(id);
+      this.engines.delete(resolvedId);
+      this.sessionNameMap.delete(session.name);
     }
 
     this.logger.log(`Session stopped: ${session.name}`, {
-      sessionId: id,
+      sessionId: resolvedId,
       action: 'stop',
     });
-    await this.updateStatus(id, SessionStatus.DISCONNECTED);
-    return this.findOne(id);
+    await this.updateStatus(resolvedId, SessionStatus.DISCONNECTED);
+    return this.findOne(resolvedId);
   }
 
   async getQRCode(id: string): Promise<{ qrCode: string; status: SessionStatus }> {
     const session = await this.findOne(id);
-    const engine = this.engines.get(id);
+    const resolvedId = session.id;
+    const engine = this.engines.get(resolvedId);
 
     if (!engine) {
       throw new BadRequestException('Session is not started. Call POST /sessions/:id/start first.');
@@ -461,12 +483,13 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
   }
 
   getEngine(id: string): IWhatsAppEngine | undefined {
-    return this.engines.get(id);
+    return this.engines.get(this.resolveId(id));
   }
 
   async getGroups(id: string): Promise<{ id: string; name: string }[]> {
-    await this.findOne(id); // Verify session exists
-    const engine = this.engines.get(id);
+    const session = await this.findOne(id);
+    const resolvedId = session.id;
+    const engine = this.engines.get(resolvedId);
 
     if (!engine) {
       throw new BadRequestException('Session is not started');
@@ -535,6 +558,6 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
    * Check if session is currently active (engine running)
    */
   isActive(id: string): boolean {
-    return this.engines.has(id);
+    return this.engines.has(this.resolveId(id));
   }
 }

@@ -25,10 +25,14 @@ services:
       dockerfile: Dockerfile
     container_name: openwa-api
     restart: unless-stopped
+    command: sh -c "find /app/data/sessions -name 'SingletonLock' -o -name 'SingletonSocket' -o -name 'SingletonCookie' | xargs rm -f 2>/dev/null; node dist/main.js"
     ports:
       - '127.0.0.1:${API_PORT:-2785}:2785'
     expose:
       - '2785'
+    networks:
+      - default
+      - uccd_net
     environment:
       # Core
       - NODE_ENV=${NODE_ENV:-production}
@@ -107,6 +111,9 @@ services:
     restart: unless-stopped
     expose:
       - '80'
+    networks:
+      - default
+      - uccd_net
     depends_on:
       - openwa-api
     labels:
@@ -189,3 +196,6 @@ volumes:
 networks:
   default:
     name: openwa-network
+  uccd_net:
+    external: true
+    name: uccd_uccd_net

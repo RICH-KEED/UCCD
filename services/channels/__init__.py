@@ -5,6 +5,7 @@ import re
 from typing import Optional
 
 from services.channels.base import BaseChannel
+from services.translation_service import SarvamTranslationService, TranslationStage
 
 logger = logging.getLogger(__name__)
 
@@ -65,18 +66,37 @@ def try_extract_details(text: str) -> dict:
             result["account_no"] = acct_match.group(1)
 
     # ── name ──
-    name_match = re.search(
-        r"(?:name\s*(?:is|:)?\s*|I\s+am\s+|this\s+is\s+)"
-        r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4})", text
-    )
+    name_match = None
+    # Try English patterns first
+    patterns = [
+        r"(?:name\s*(?:is|:)?\s*|I\s+am\s+|this\s+is\s+)",
+        r"(?:called|named)\s+",
+        r"\b"
+    ]
+    # Note: The third pattern is just a word boundary, we will adjust the pattern for the name
+    # We'll build the regex for each pattern
+    for pattern in patterns:
+        if pattern == r"\b":
+            # For the third pattern, we use: \b([A-Z][a-z]{2,}(?:\s+[A-Z][a-z]{2,}){1,3})\b
+            regex = r"\b([A-Z][a-z]{2,}(?:\s+[A-Z][a-z]{2,}){1,3})\b"
+        else:
+            regex = pattern + r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4})"
+        name_match = re.search(regex, text)
+        if name_match:
+            break
+
+    # If not found, try Hindi patterns
     if not name_match:
-        name_match = re.search(
-            r"(?:called|named)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4})", text
-        )
-    if not name_match:
-        name_match = re.search(
-            r"\b([A-Z][a-z]{2,}(?:\s+[A-Z][a-z]{2,}){1,3})\b", text
-        )
+        hindi_patterns = [
+            r"मैं\s+([\u0900-\u097F\s]+?)\s+बोल\s+(?:रहा|रही)\s+हूँ[\.!]?",
+            r"मेरा\s+नाम\s+([\u0900-\u097F\s]+?)\s+है[\.!]?",
+            r"([\u0900-\u097F\s]+?)\s+बोल\s+(?:रहा|रही)\s+हूँ[\.!]?"
+        ]
+        for pattern in hindi_patterns:
+            name_match = re.search(pattern, text, re.IGNORECASE)
+            if name_match:
+                break
+
     if name_match:
         result["name"] = name_match.group(1).strip()
 
@@ -191,6 +211,26 @@ async def send_response(complaint, text: str) -> bool:
     if not complaint.source_ref:
         logger.warning(f"Complaint {complaint.id} has no source_ref — cannot send response via {channel_name}.")
         return False
+
+    # Translate the text to the complaint's language if it's not English
+    target_lang = complaint.detected_language or complaint.language_code or "en-IN"
+    if target_lang != "en-IN":
+        try:
+            svc = SarvamTranslationService()
+            result = await svc.translate(
+                text=text,
+                stage=TranslationStage.PREVIEW,
+                target_lang=target_lang,
+            )
+            translated_text = result.get("translated_text")
+            if translated_text is not None:
+                text = translated_text
+            else:
+                logger.warning("Translation failed, sending original text.")
+        except Exception as e:
+            logger.warning(f"Translation error: {e}")
+            # Fallback to original text
+
     return await channel.send_message(complaint.source_ref, text)
 
 
@@ -244,6 +284,26 @@ async def send_triage_update(complaint, ai_draft: str) -> bool:
             f"---\n"
             f"This is an automated triage update from Union Bank of India Support."
         )
+
+    # Translate the triage update to the complaint's language if it's not English
+    target_lang = complaint.detected_language or complaint.language_code or "en-IN"
+    if target_lang != "en-IN":
+        try:
+            svc = SarvamTranslationService()
+            result = await svc.translate(
+                text=msg,
+                stage=TranslationStage.PREVIEW,
+                target_lang=target_lang,
+            )
+            translated_msg = result.get("translated_text")
+            if translated_msg is not None:
+                msg = translated_msg
+            else:
+                logger.warning("Translation failed for triage update, sending original.")
+        except Exception as e:
+            logger.warning(f"Translation error in triage update: {e}")
+            # Fallback to original msg
+
     return await channel.send_message(complaint.source_ref, msg)
 
 

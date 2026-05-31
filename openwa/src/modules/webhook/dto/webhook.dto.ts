@@ -22,7 +22,7 @@ export class CreateWebhookDto {
     description: 'Webhook URL to receive events',
     example: 'https://your-server.com/webhook',
   })
-  @IsUrl()
+  @IsUrl({ require_tld: false })
   url: string;
 
   @ApiPropertyOptional({
@@ -66,7 +66,7 @@ export class CreateWebhookDto {
 export class UpdateWebhookDto {
   @ApiPropertyOptional({ description: 'Webhook URL' })
   @IsOptional()
-  @IsUrl()
+  @IsUrl({ require_tld: false })
   url?: string;
 
   @ApiPropertyOptional({ description: 'Event types to subscribe to' })
