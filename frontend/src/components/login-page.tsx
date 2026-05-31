@@ -42,30 +42,45 @@ export function LoginPage() {
   const [loadingAgents, setLoadingAgents] = useState(false)
 
   useEffect(() => {
+    let active = true
+
     if (selectedRole === 'AGENT') {
-      setLoadingAgents(true)
-      fetch(`${API_BASE_URL}/api/v1/agents/list`)
-        .then((r) => r.json())
-        .then((data) => {
-          const list = data.agents ?? []
-          setAgents(list)
-          if (list.length > 0) {
-            setEmail(list[0].email)
-          } else {
-            setEmail('')
-          }
-          setPassword(DEMO_PASSWORDS.AGENT)
-        })
-        .catch(() => {
-          setAgents([])
-          setPassword(DEMO_PASSWORDS.AGENT)
-        })
-        .finally(() => setLoadingAgents(false))
+      if (agents.length > 0) {
+        setEmail(agents[0].email)
+        setPassword(DEMO_PASSWORDS.AGENT)
+      } else {
+        setLoadingAgents(true)
+        fetch(`${API_BASE_URL}/api/v1/agents/list`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (!active) return
+            const list = data.agents ?? []
+            setAgents(list)
+            if (list.length > 0) {
+              setEmail(list[0].email)
+            } else {
+              setEmail('')
+            }
+            setPassword(DEMO_PASSWORDS.AGENT)
+          })
+          .catch(() => {
+            if (!active) return
+            setAgents([])
+            setPassword(DEMO_PASSWORDS.AGENT)
+          })
+          .finally(() => {
+            if (active) setLoadingAgents(false)
+          })
+      }
     } else {
       setEmail(DEMO_EMAILS[selectedRole] ?? '')
       setPassword(DEMO_PASSWORDS[selectedRole])
     }
-  }, [selectedRole])
+
+    return () => {
+      active = false
+    }
+  }, [selectedRole, agents])
 
   useEffect(() => {
     if (isAuthenticated && user) {
