@@ -110,7 +110,7 @@ services:
     profiles: ['with-dashboard', 'full']
     restart: unless-stopped
     ports:
-      - '${DASHBOARD_PORT:-2886}:80'
+      - '${DASHBOARD_PORT:-2888}:80'
     expose:
       - '80'
     networks:
