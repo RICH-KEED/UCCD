@@ -200,6 +200,25 @@ The key should stay stable as long as this directory is kept:
 
 Do not delete `openwa-data` after pairing WhatsApp, otherwise OpenWA may generate a new API key and lose session data.
 
+Start the OpenWA dashboard (accessible at `https://omniresol.me/openwa-dashboard/`):
+
+```bash
+cd /opt/uccd/openwa
+docker compose --profile full up -d
+```
+
+If Docker permission is not configured:
+
+```bash
+sudo docker compose --profile full up -d
+```
+
+Verify the dashboard is running:
+
+```bash
+curl -s http://127.0.0.1:2886/ | head -5
+```
+
 ## 6. Backend Setup
 
 ```bash
@@ -338,6 +357,15 @@ Paste:
 server {
     listen 80;
     server_name omniresol.me www.omniresol.me;
+
+    location /openwa-dashboard/ {
+        proxy_pass http://127.0.0.1:2886/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 
     location /api/v1/ws/ {
         proxy_pass http://127.0.0.1:8000/api/v1/ws/;
