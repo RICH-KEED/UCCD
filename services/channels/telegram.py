@@ -1,20 +1,28 @@
 import asyncio
+import json
 import os
 import logging
 import threading
 import time
-from dataclasses import dataclass
+import re
+from datetime import datetime, timezone
+from typing import Optional
+from dataclasses import dataclass, asdict
 
 import requests
 
 from services.channels.base import BaseChannel
 from services.channels import extract_details_llm
+from services.cache import r
 from api.db.session import get_db
 from api.models.outbound_message import OutboundMessage
 
 logger = logging.getLogger(__name__)
 
 TELEGRAM_API = "https://api.telegram.org"
+
+CONVERSATION_TTL_SECONDS = 3600
+CONVERSATION_KEY_PREFIX = "tg_conv:"
 
 STEPS = ["complaint", "name", "account_no", "phone", "email", "registered"]
 
@@ -25,6 +33,8 @@ STEP_PROMPTS = {
     "phone": "Please provide your phone number.",
     "email": "Please provide your email address.",
 }
+
+COMPLAINT_ACKNOWLEDGMENT = "Thank you for describing your issue. Now, let's collect your details."
 
 
 @dataclass
@@ -37,6 +47,32 @@ class UserSession:
     email: str = ""
     complaint_id: str = ""
     chat_id: int = 0
+    language_code: str = "en-IN"
+    updated_at: str = ""
+
+
+def _tg_conv_key(chat_id: int) -> str:
+    return f"{CONVERSATION_KEY_PREFIX}{chat_id}"
+
+
+def _get_tg_session(chat_id: int) -> Optional[dict]:
+    raw = r.get(_tg_conv_key(chat_id))
+    if raw is None:
+        return None
+    try:
+        return json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        r.delete(_tg_conv_key(chat_id))
+        return None
+
+
+def _save_tg_session(chat_id: int, session: dict) -> None:
+    session["updated_at"] = datetime.now(timezone.utc).isoformat()
+    r.setex(_tg_conv_key(chat_id), CONVERSATION_TTL_SECONDS, json.dumps(session, ensure_ascii=False))
+
+
+def _delete_tg_session(chat_id: int) -> None:
+    r.delete(_tg_conv_key(chat_id))
 
 
 class TelegramChannel(BaseChannel):
@@ -51,7 +87,6 @@ class TelegramChannel(BaseChannel):
         self.api_host = api_host or os.getenv("API_HOST", "http://localhost:8000")
         self._thread: threading.Thread | None = None
         self._stop_flag = threading.Event()
-        self._sessions: dict[int, UserSession] = {}
 
     def is_configured(self) -> bool:
         return bool(self.token and self.token.strip() and self.token != "YOUR_TELEGRAM_BOT_TOKEN")
@@ -70,6 +105,54 @@ class TelegramChannel(BaseChannel):
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=5)
         logger.info("TelegramChannel stopped.")
+    def _detect_language(self, text: str) -> str:
+        """Detect language of the text. Returns language code like 'hi-IN' or 'en-IN'."""
+        # Simple heuristic: if text contains any Hindi character, assume Hindi
+        if re.search(r"[\u0900-\u097F]", text):
+            return "hi-IN"
+        return "en-IN"
+
+    def _translate_text(self, text: str, target_lang: str) -> Optional[str]:
+        """Translate English text to target language using Sarvam.
+        Returns translated text if successful, else None."""
+        if target_lang == "en-IN":
+            return text
+        try:
+            sarvam_key = os.getenv("SARVAM_ACCESS_TOKEN", "")
+            if not sarvam_key:
+                logger.warning("Sarvam API key not set for translation")
+                return None
+            resp = requests.post(
+                "https://api.sarvam.ai/v1/chat/completions",
+                headers={
+                    "api-subscription-key": sarvam_key,
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "sarvam-105b",
+                    "messages": [{"role": "user", "content": f"Translate the following English text to {target_lang}: {text}"}],
+                    "temperature": 0.0,
+                    "top_p": 1,
+                },
+                timeout=15,
+            )
+            if resp.status_code == 200:
+                translated = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+                return translated.strip() if translated else None
+            else:
+                logger.warning("Sarvam translation returned status %s", resp.status_code)
+                return None
+        except Exception as e:
+            logger.warning("Sarvam translation failed: %s", e)
+            return None
+
+    def _get_localized_text(self, english_text: str, session: UserSession) -> str:
+        if session.language_code == "en-IN":
+            return english_text
+        translated = self._translate_text(english_text, session.language_code)
+        if translated is not None:
+            return translated
+        return english_text   # fallback to English
 
     def _send_telegram(self, chat_id: int, text: str, parse_mode: str = "Markdown") -> bool:
         base_url = f"{TELEGRAM_API}/bot{self.token}"
@@ -85,10 +168,13 @@ class TelegramChannel(BaseChannel):
             return False
 
     def _handle_update(self, chat_id: int, text_strip: str, base_url: str) -> None:
-        if chat_id not in self._sessions:
+        session_raw = _get_tg_session(chat_id)
+
+        if session_raw is None:
+            detected_lang = self._detect_language(text_strip)
             details = extract_details_llm(text_strip)
             if details["name"] and (details["account_no"] or details["phone"] or details["email"]):
-                session = UserSession(chat_id=chat_id)
+                session = UserSession(chat_id=chat_id, language_code=detected_lang)
                 session.complaint_text = details["complaint_text"]
                 session.name = details["name"]
                 session.account_no = details["account_no"] or ""
@@ -97,58 +183,80 @@ class TelegramChannel(BaseChannel):
                 logger.info("Telegram: extracted all details from first message, creating complaint directly.")
                 self._create_complaint_from_session(session, chat_id, base_url)
                 return
-            self._sessions[chat_id] = UserSession(chat_id=chat_id)
-            self._send_telegram(
-                chat_id,
+            session = UserSession(chat_id=chat_id, language_code=detected_lang)
+            _save_tg_session(chat_id, asdict(session))
+            welcome = self._get_localized_text(
                 "\U0001f3e6 *Welcome to Union Bank of India Support!*\n\nPlease describe your complaint or issue in detail.",
+                session,
             )
+            self._send_telegram(chat_id, welcome)
             return
 
-        session = self._sessions[chat_id]
+        session = UserSession(**session_raw)
 
         if text_strip.lower() == "/start":
-            self._sessions[chat_id] = UserSession(chat_id=chat_id)
-            self._send_telegram(
-                chat_id,
+            detected_lang = self._detect_language(text_strip)
+            new_session = UserSession(chat_id=chat_id, language_code=detected_lang)
+            _save_tg_session(chat_id, asdict(new_session))
+            welcome = self._get_localized_text(
                 "\U0001f3e6 *Welcome to Union Bank of India Support!*\n\nPlease describe your complaint or issue in detail.",
+                new_session,
             )
+            self._send_telegram(chat_id, welcome)
             return
 
         if text_strip.lower() == "/reset":
-            self._sessions[chat_id] = UserSession(chat_id=chat_id)
-            self._send_telegram(chat_id, "\U0001f504 *Session reset.*\n\nPlease describe your complaint or issue in detail.")
+            detected_lang = session.language_code
+            new_session = UserSession(chat_id=chat_id, language_code=detected_lang)
+            _save_tg_session(chat_id, asdict(new_session))
+            reset_msg = self._get_localized_text(
+                "\U0001f504 *Session reset.*\n\nPlease describe your complaint or issue in detail.",
+                new_session,
+            )
+            self._send_telegram(chat_id, reset_msg)
             return
 
         if session.step == "registered":
-            self._send_telegram(
-                chat_id,
+            msg = self._get_localized_text(
                 f"\u2705 *Your complaint is registered.*\n\n*Ticket ID:* `{session.complaint_id}`\n\nYou will be notified when it is resolved.",
+                session,
             )
-            del self._sessions[chat_id]
+            self._send_telegram(chat_id, msg)
+            _delete_tg_session(chat_id)
             return
 
         if session.step == "complaint":
             session.complaint_text = text_strip
             session.step = "name"
-            self._send_telegram(chat_id, STEP_PROMPTS["name"])
+            _save_tg_session(chat_id, asdict(session))
+            ack = self._get_localized_text(COMPLAINT_ACKNOWLEDGMENT, session)
+            self._send_telegram(chat_id, ack)
+            name_prompt = self._get_localized_text(STEP_PROMPTS["name"], session)
+            self._send_telegram(chat_id, name_prompt)
             return
 
         if session.step == "name":
             session.name = text_strip
             session.step = "account_no"
-            self._send_telegram(chat_id, STEP_PROMPTS["account_no"])
+            _save_tg_session(chat_id, asdict(session))
+            prompt = self._get_localized_text(STEP_PROMPTS["account_no"], session)
+            self._send_telegram(chat_id, prompt)
             return
 
         if session.step == "account_no":
             session.account_no = text_strip
             session.step = "phone"
-            self._send_telegram(chat_id, STEP_PROMPTS["phone"])
+            _save_tg_session(chat_id, asdict(session))
+            prompt = self._get_localized_text(STEP_PROMPTS["phone"], session)
+            self._send_telegram(chat_id, prompt)
             return
 
         if session.step == "phone":
             session.phone = text_strip
             session.step = "email"
-            self._send_telegram(chat_id, STEP_PROMPTS["email"])
+            _save_tg_session(chat_id, asdict(session))
+            prompt = self._get_localized_text(STEP_PROMPTS["email"], session)
+            self._send_telegram(chat_id, prompt)
             return
 
         if session.step == "email":
@@ -162,6 +270,8 @@ class TelegramChannel(BaseChannel):
             "source_ref": str(chat_id),
             "raw_text": session.complaint_text,
         }
+        if session.language_code != "en-IN":
+            payload["language_code"] = session.language_code
 
         try:
             res = requests.post(f"{self.api_host}/api/v1/complaints", json=payload, timeout=8)
@@ -169,11 +279,11 @@ class TelegramChannel(BaseChannel):
                 complaint_data = res.json()
                 session.complaint_id = complaint_data.get("id")
                 session.step = "registered"
+                _save_tg_session(chat_id, asdict(session))
 
                 self._update_complaint_details(session)
 
-                self._send_telegram(
-                    chat_id,
+                confirm = self._get_localized_text(
                     f"\u2705 *Complaint Registered!*\n\n"
                     f"*Ticket ID:* `{session.complaint_id}`\n"
                     f"*Name:* {session.name}\n"
@@ -181,13 +291,23 @@ class TelegramChannel(BaseChannel):
                     f"*Phone:* {session.phone}\n"
                     f"*Email:* {session.email}\n\n"
                     f"Our team is reviewing your case. You will be notified when it is resolved.",
+                    session,
                 )
+                self._send_telegram(chat_id, confirm)
             else:
                 logger.warning(f"API returned status {res.status_code}: {res.text}")
-                self._send_telegram(chat_id, "\u274c Could not register your complaint. Please try again later.")
+                err = self._get_localized_text(
+                    "\u274c Could not register your complaint. Please try again later.",
+                    session,
+                )
+                self._send_telegram(chat_id, err)
         except Exception as api_err:
             logger.warning(f"Failed to create complaint: {api_err}")
-            self._send_telegram(chat_id, "\u274c Could not register your complaint. Please try again later.")
+            err = self._get_localized_text(
+                "\u274c Could not register your complaint. Please try again later.",
+                session,
+            )
+            self._send_telegram(chat_id, err)
 
     def _update_complaint_details(self, session: UserSession) -> None:
         if not session.complaint_id:

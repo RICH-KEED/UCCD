@@ -51,6 +51,7 @@ class InstagramSettings(BaseModel):
 class WhatsAppSettings(BaseModel):
     openwa_base_url: str = "http://localhost:8081"
     openwa_api_key: str = ""
+    openwa_session_name: str = "uccd"
     webhook_url: str = ""
     session_data_path: str = "whatsapp_session.json"
 
@@ -128,6 +129,7 @@ class Settings(BaseModel):
             whatsapp=WhatsAppSettings(
                 openwa_base_url=os.getenv("OPENWA_BASE_URL", "http://localhost:8081"),
                 openwa_api_key=os.getenv("OPENWA_API_KEY", ""),
+                openwa_session_name=os.getenv("OPENWA_SESSION_NAME", "uccd"),
                 webhook_url=os.getenv("OPENWA_WEBHOOK_URL", ""),
                 session_data_path=os.getenv("OPENWA_SESSION_DATA_PATH", "whatsapp_session.json"),
             ),

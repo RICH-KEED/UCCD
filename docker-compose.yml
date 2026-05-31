@@ -75,7 +75,7 @@ services:
       - uccd_net
 
   openwa:
-    image: openwa/openwa:latest
+    build: ./openwa
     ports:
       - "8081:8081"
     volumes:
