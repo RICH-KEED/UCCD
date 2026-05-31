@@ -42,6 +42,16 @@ const rolesConfig: { role: UserRole; label: string; icon: ReactNode }[] = [
   },
 ]
 
+const DEMO_PASSWORDS: Record<UserRole, string> = {
+  AGENT: 'union@123',
+  SUPERVISOR: 'Test@123',
+  COMPLIANCE: 'Test@123',
+}
+const DEMO_EMAILS: Partial<Record<UserRole, string>> = {
+  SUPERVISOR: 'supervisor@example.com',
+  COMPLIANCE: 'compliance@example.com',
+}
+
 function LeftPanelPhone() {
   return (
     <div style={{ position: 'relative', width: 140, height: 200, flexShrink: 0 }}>
@@ -297,13 +307,13 @@ export function Login() {
         .then((data) => {
           setAgents(data.agents ?? [])
           setEmail('')
-          setPassword('')
+          setPassword(DEMO_PASSWORDS.AGENT)
         })
         .catch(() => setAgents([]))
         .finally(() => setLoadingAgents(false))
     } else {
-      setEmail('')
-      setPassword('')
+      setEmail(DEMO_EMAILS[selectedRole] ?? '')
+      setPassword(DEMO_PASSWORDS[selectedRole])
     }
   }, [selectedRole])
 
@@ -687,7 +697,7 @@ export function Login() {
                         value={email}
                         onChange={(e) => {
                           setEmail(e.target.value)
-                          setPassword('')
+                          setPassword(DEMO_PASSWORDS.AGENT)
                           setError('')
                         }}
                         required

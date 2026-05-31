@@ -10,6 +10,7 @@ can be used by Docker containers for automatic login.
 Environment variables (from .env or inline):
     INSTAGRAM_USERNAME     - Instagram username
     INSTAGRAM_PASSWORD     - Instagram password
+    INSTAGRAM_SESSIONID    - Optional browser sessionid cookie fallback
     INSTAGRAM_SESSION_FILE - Path to save session (default: instagram_session.json)
 """
 
@@ -48,10 +49,11 @@ def setup_session():
 
     username = os.getenv("INSTAGRAM_USERNAME", "")
     password = os.getenv("INSTAGRAM_PASSWORD", "")
+    sessionid = os.getenv("INSTAGRAM_SESSIONID", "")
     session_file = os.getenv("INSTAGRAM_SESSION_FILE", "instagram_session.json")
 
-    if not username or not password:
-        print("ERROR: INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD must be set in .env")
+    if not username or not (password or sessionid):
+        print("ERROR: INSTAGRAM_USERNAME and either INSTAGRAM_PASSWORD or INSTAGRAM_SESSIONID must be set in .env")
         sys.exit(1)
 
     client = Client()
@@ -72,6 +74,20 @@ def setup_session():
                 os.remove(session_file)
             except OSError:
                 pass
+
+    if sessionid:
+        try:
+            client.login_by_sessionid(sessionid)
+            client.get_timeline_feed()
+            client.dump_settings(session_file)
+            print(f"\nSUCCESS: Logged in with browser sessionid as @{client.username}")
+            print(f"Session saved to: {session_file}")
+            return
+        except Exception as e:
+            print(f"\nWARNING: Browser sessionid login failed: {e}")
+            if not password:
+                sys.exit(1)
+            print("Falling back to username/password login...")
 
     try:
         client.login(username, password)
