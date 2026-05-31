@@ -73,6 +73,7 @@ def create_complaint_internal(payload: dict) -> Complaint:
                 "status": "queued",
                 "channel": db_complaint.channel,
                 "customer_id": db_complaint.customer_id,
+                "raw_text": db_complaint.raw_text,
             })
         except Exception:
             pass

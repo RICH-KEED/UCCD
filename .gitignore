@@ -31,6 +31,8 @@ Thumbs.db
 
 # Session/auth token files
 *.tw_session
+*session.json
+*.json_session
 
 # Frontend
 frontend/node_modules/

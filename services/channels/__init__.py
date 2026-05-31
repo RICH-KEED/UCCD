@@ -126,7 +126,7 @@ def extract_details_llm(text: str) -> dict:
     prompt = (
         "Extract customer details from this message. "
         "Return ONLY a valid JSON object (no markdown, no backticks) with these keys:\n"
-        '- "customer_name": the person\'s full name\n'
+        '- "customer_name": the person\'s full name. If the name is not a real person\'s name (e.g. if it is a relative time description like "three weeks ago" / "तीन आठवड्यांपूर्वी", a verb, or other sentence words), set it to null.\n'
         '- "account_number": any account number mentioned (digits only)\n'
         '- "customer_phone": any phone number (10+ digits)\n'
         '- "customer_email": any email address mentioned\n'

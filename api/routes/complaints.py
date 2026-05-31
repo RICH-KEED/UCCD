@@ -86,6 +86,7 @@ def create_complaint(complaint: ComplaintCreate,background_tasks: BackgroundTask
             "status": db_complaint.status,
             "channel": db_complaint.channel,
             "customer_id": db_complaint.customer_id,
+            "raw_text": db_complaint.raw_text,
         },
     )
 
@@ -472,26 +473,47 @@ async def request_user_details(
     db.commit()
     db.refresh(complaint)
 
+    # Broadcast WebSocket event to update UI immediately
+    try:
+        broadcast_event({
+            "type": "complaint_details_updated",
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "complaint_id": str(complaint.id),
+        })
+    except Exception:
+        pass
+
     default_message = (
         "Thank you for reaching out. To help us process your complaint faster, "
         "could you please provide your full name, email address, phone number, and account number?"
     )
 
+    translated_message = None
     try:
         from services.translation_service import SarvamTranslationService, TranslationStage
         svc = SarvamTranslationService()
         target_lang = complaint.detected_language or complaint.language_code or "en-IN"
-        result = await svc.translate(
-            text=default_message,
-            stage=TranslationStage.PREVIEW,
-            target_lang=target_lang,
-        )
-        return {
-            "message": default_message,
-            "translated_message": result.get("translated_text"),
-        }
+        if target_lang != "en-IN":
+            result = await svc.translate(
+                text=default_message,
+                stage=TranslationStage.PREVIEW,
+                target_lang=target_lang,
+            )
+            translated_message = result.get("translated_text")
     except Exception:
-        return {"message": default_message}
+        pass
+
+    # Actually send to the customer's channel!
+    try:
+        from services.channels import send_response
+        await send_response(complaint, default_message)
+    except Exception as e:
+        print(f"Failed to send details request to channel: {e}")
+
+    return {
+        "message": default_message,
+        "translated_message": translated_message or default_message,
+    }
 
 
 @router.put("/{complaint_id}/details", response_model=ComplaintResponse)
