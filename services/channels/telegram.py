@@ -216,6 +216,13 @@ class TelegramChannel(BaseChannel):
                     )
                     self._send_telegram(chat_id, msg)
                     return
+                else:
+                    msg = self._get_localized_text(
+                        "We could not verify your details. Please reply with your full name, email address, phone number, and account number.",
+                        UserSession(language_code=self._detect_language(text_strip))
+                    )
+                    self._send_telegram(chat_id, msg)
+                    return
         except Exception as e:
             logger.error(f"Error checking pending details in telegram: {e}")
         finally:

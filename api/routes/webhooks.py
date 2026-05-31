@@ -379,6 +379,30 @@ async def mailgun_inbound(request: Request, db: Session = Depends(get_db)):
             event.processed_at = datetime.now(timezone.utc)
             db.commit()
             return {"status": "details_updated", "complaint_id": str(pending_complaint.id)}
+        else:
+            from services.channels import get_channel
+            channel = get_channel("email")
+            if channel and channel.enabled:
+                msg = "We could not verify your details. Please reply with your full name, email address, phone number, and account number."
+                target_lang = pending_complaint.detected_language or pending_complaint.language_code or "en-IN"
+                if target_lang != "en-IN":
+                    try:
+                        from services.translation_service import SarvamTranslationService, TranslationStage
+                        svc = SarvamTranslationService()
+                        res = await svc.translate(msg, TranslationStage.PREVIEW, target_lang)
+                        msg = res.get("translated_text", msg)
+                    except Exception:
+                        pass
+                await channel.send_message(
+                    from_addr,
+                    msg,
+                    subject=f"Details Needed — #{str(pending_complaint.id)[:8]}",
+                )
+
+            event.processed = True
+            event.processed_at = datetime.now(timezone.utc)
+            db.commit()
+            return {"status": "details_needed", "complaint_id": str(pending_complaint.id)}
 
     try:
         conv_mode = _is_email_conversation_mode()
@@ -509,6 +533,26 @@ async def openwa_callback(request: Request, db: Session = Depends(get_db)):
                 event.processed_at = datetime.now(timezone.utc)
                 db.commit()
                 return {"status": "details_updated", "complaint_id": str(pending_complaint.id)}
+            else:
+                from services.channels import get_channel
+                channel = get_channel("whatsapp")
+                if channel and channel.enabled:
+                    msg = "We could not verify your details. Please reply with your full name, email address, phone number, and account number."
+                    target_lang = pending_complaint.detected_language or pending_complaint.language_code or "en-IN"
+                    if target_lang != "en-IN":
+                        try:
+                            from services.translation_service import SarvamTranslationService, TranslationStage
+                            svc = SarvamTranslationService()
+                            res = await svc.translate(msg, TranslationStage.PREVIEW, target_lang)
+                            msg = res.get("translated_text", msg)
+                        except Exception:
+                            pass
+                    await channel.send_message(chat_id, msg)
+
+                event.processed = True
+                event.processed_at = datetime.now(timezone.utc)
+                db.commit()
+                return {"status": "details_needed", "complaint_id": str(pending_complaint.id)}
 
         if _is_whatsapp_conversation_mode():
             result = await _process_whatsapp_conversation(
