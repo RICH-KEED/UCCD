@@ -8,15 +8,18 @@ import { Play, Pause, SkipForward, Square, Cpu, Activity } from 'lucide-react'
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_BASE_URL || ''
 
+// cx/cy are the CENTER coordinates of each node in the SVG/container space
+const NODE_W = 160
+const NODE_H = 80
 const PIPELINE_STAGES = [
-  { id: 'translation', label: 'Translation', icon: '🌐', x: 280, y: 30 },
-  { id: 'nlp', label: 'NLP Classify', icon: '🧠', x: 500, y: 30 },
-  { id: 'emotion', label: 'Emotion', icon: '🎭', x: 500, y: 150 },
-  { id: 'severity', label: 'Severity', icon: '⚡', x: 500, y: -90 },
-  { id: 'dna', label: 'DNA Match', icon: '🔬', x: 720, y: -50 },
-  { id: 'escalation', label: 'Escalation', icon: '🚨', x: 720, y: -170 },
-  { id: 'root_cause', label: 'Root Cause', icon: '🔍', x: 920, y: 30 },
-  { id: 'merge_and_save', label: 'Merge & Save', icon: '💾', x: 1120, y: 30 },
+  { id: 'translation', label: 'Translation', icon: '🌐', cx: 120, cy: 250 },
+  { id: 'nlp', label: 'NLP Classify', icon: '🧠', cx: 340, cy: 250 },
+  { id: 'emotion', label: 'Emotion', icon: '🎭', cx: 560, cy: 370 },
+  { id: 'severity', label: 'Severity', icon: '⚡', cx: 560, cy: 130 },
+  { id: 'dna', label: 'DNA Match', icon: '🔬', cx: 780, cy: 130 },
+  { id: 'escalation', label: 'Escalation', icon: '🚨', cx: 780, cy: 20 },
+  { id: 'root_cause', label: 'Root Cause', icon: '🔍', cx: 1000, cy: 250 },
+  { id: 'merge_and_save', label: 'Merge & Save', icon: '💾', cx: 1220, cy: 250 },
 ]
 
 const EDGES = [
@@ -138,9 +141,10 @@ function StageNode({ stage, status, isActive }: { stage: typeof PIPELINE_STAGES[
       animate={{ scale: isActive ? 1.04 : 1 }}
       className={`absolute flex flex-col items-center justify-center py-2 px-3 rounded-xl border backdrop-blur-md text-center z-10 w-40 h-[80px] ${configs.bg}`}
       style={{
-        left: stage.x,
-        top: stage.y + 250,
-        transform: 'translate(-50%, -50%)',
+        left: stage.cx,
+        top: stage.cy,
+        marginLeft: -NODE_W / 2,
+        marginTop: -NODE_H / 2,
         transition: 'border-color 0.3s, background-color 0.3s, color 0.3s, box-shadow 0.3s',
       }}
     >
@@ -252,18 +256,22 @@ function RunDetail({ run, onClose }: { run: PipelineRun; onClose: () => void }) 
 
 function PipelineDAG({ run }: { run: PipelineRun | null }) {
   const stagesStatus = run?.stages ?? {}
+  const halfW = NODE_W / 2
+  const halfH = NODE_H / 2
   return (
-    <div className="w-full h-[520px] overflow-auto rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-900 relative">
-      {/* Subtle grid background pattern, responsive to light/dark themes */}
+    <div className="w-full h-[440px] overflow-auto rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-900 relative">
+      {/* Subtle grid background pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.04)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] opacity-75 pointer-events-none" />
-      <div className="relative w-[1320px] h-[500px]">
-        {/* Render a single SVG overlay to handle arrowheads and z-index ordering cleanly */}
-        <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-20">
+      {/* Single container sized to fit all nodes: width=1320, height=430 */}
+      <div className="relative" style={{ width: 1360, height: 430 }}>
+        {/* SVG for edges - same dimensions as container */}
+        <svg
+          className="absolute top-0 left-0 pointer-events-none"
+          style={{ width: 1360, height: 430, zIndex: 5 }}
+        >
           <style>{`
             @keyframes active-flow {
-              to {
-                stroke-dashoffset: -20;
-              }
+              to { stroke-dashoffset: -20; }
             }
             .animate-flow-path {
               stroke-dasharray: 8, 4;
@@ -278,106 +286,108 @@ function PipelineDAG({ run }: { run: PipelineRun | null }) {
             const fromDone = stagesStatus[edge.from]?.status === 'completed'
             const isRunning = stagesStatus[edge.to]?.status === 'running'
 
-            // Edge styles
-            let pathClass = 'text-slate-300 dark:text-slate-800'
-            let strokeWidth = 2
+            let strokeColor = '#94a3b8' // slate-400
+            let strokeWidth = 1.5
+            let animated = false
 
             if (fromDone) {
-              pathClass = 'text-emerald-500'
-              strokeWidth = 3
-            } else if (isRunning) {
-              pathClass = 'text-blue-500 animate-flow-path'
+              strokeColor = '#10b981' // emerald-500
               strokeWidth = 2.5
+            } else if (isRunning) {
+              strokeColor = '#3b82f6' // blue-500
+              strokeWidth = 2
+              animated = true
             }
 
-            const x1 = from.x
-            const y1 = from.y + 250
-            const x2 = to.x
-            const y2 = to.y + 250
+            // Node centers
+            const cx1 = from.cx
+            const cy1 = from.cy
+            const cx2 = to.cx
+            const cy2 = to.cy
 
-            const halfW = 80 // half of node width 160
-            const halfH = 40 // half of node height 80
+            // Determine which edges of the nodes to connect from/to
+            let startX: number, startY: number, endX: number, endY: number
+            let pathD: string
+            let arrowType: 'right' | 'up' | 'down' | 'left' = 'right'
 
-            let startX = 0
-            let startY = 0
-            let endX = 0
-            let endY = 0
-            let pathD = ''
-            let arrowType: 'right' | 'up' | 'down' = 'right'
+            const dx = cx2 - cx1
+            const dy = cy2 - cy1
 
-            if (Math.abs(x1 - x2) < 5) {
-              // Vertical connection
-              if (y1 < y2) {
-                startX = x1
-                startY = y1 + halfH
-                endX = x2
-                endY = y2 - halfH - 4.5 // 4.5px offset so arrowhead tip aligns with border
-                pathD = `M ${startX} ${startY} L ${endX} ${endY}`
-                arrowType = 'down'
+            if (Math.abs(dx) >= Math.abs(dy)) {
+              // Mostly horizontal: connect right-edge of from to left-edge of to
+              startX = cx1 + halfW
+              startY = cy1
+              endX = cx2 - halfW
+              endY = cy2
+              arrowType = dx > 0 ? 'right' : 'left'
+
+              if (Math.abs(dy) < 5) {
+                // Straight horizontal
+                pathD = `M ${startX} ${startY} L ${endX - 6} ${endY}`
               } else {
-                startX = x1
-                startY = y1 - halfH
-                endX = x2
-                endY = y2 + halfH + 4.5 // 4.5px offset so arrowhead tip aligns with border
-                pathD = `M ${startX} ${startY} L ${endX} ${endY}`
-                arrowType = 'up'
+                // Elbow: go horizontal then vertical
+                const midX = startX + (endX - startX) / 2
+                pathD = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX - 6} ${endY}`
               }
             } else {
-              // Horizontal or stepped horizontal connection
-              startX = x1 + halfW
-              startY = y1
-              endX = x2 - halfW - 4.5 // 4.5px offset so arrowhead tip aligns with border
-              endY = y2
-
-              if (Math.abs(y1 - y2) < 5) {
-                pathD = `M ${startX} ${startY} L ${endX} ${endY}`
-                arrowType = 'right'
-              } else {
-                let midX = (startX + endX) / 2
-                // Special routing for escalation -> merge_and_save to bypass root_cause node
-                if (edge.from === 'escalation' && edge.to === 'merge_and_save') {
-                  midX = 1020
-                }
-                pathD = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`
-                arrowType = 'right'
-              }
+              // Mostly vertical: connect bottom/top edges
+              startX = cx1
+              startY = dy > 0 ? cy1 + halfH : cy1 - halfH
+              endX = cx2
+              endY = dy > 0 ? cy2 - halfH : cy2 + halfH
+              arrowType = dy > 0 ? 'down' : 'up'
+              const adjustedEnd = dy > 0 ? endY - 6 : endY + 6
+              pathD = `M ${startX} ${startY} L ${endX} ${adjustedEnd}`
             }
 
-            // Calculate arrowhead points
+            // Arrowhead tip at (endX, endY)
             let arrowPoints = ''
+            const A = 7 // arrow half-length
+            const B = 4.5 // arrow half-width
             if (arrowType === 'right') {
-              arrowPoints = `${endX + 3.5},${endY} ${endX - 5.5},${endY - 4.5} ${endX - 5.5},${endY + 4.5}`
+              const tx = endX - 6
+              const ty = endY
+              arrowPoints = `${tx + A},${ty} ${tx - 2},${ty - B} ${tx - 2},${ty + B}`
+            } else if (arrowType === 'left') {
+              const tx = endX + 6
+              const ty = endY
+              arrowPoints = `${tx - A},${ty} ${tx + 2},${ty - B} ${tx + 2},${ty + B}`
             } else if (arrowType === 'down') {
-              arrowPoints = `${endX},${endY + 3.5} ${endX - 4.5},${endY - 5.5} ${endX + 4.5},${endY - 5.5}`
-            } else if (arrowType === 'up') {
-              arrowPoints = `${endX},${endY - 3.5} ${endX - 4.5},${endY + 5.5} ${endX + 4.5},${endY + 5.5}`
+              const tx = endX
+              const ty = endY - 6
+              arrowPoints = `${tx},${ty + A} ${tx - B},${ty - 2} ${tx + B},${ty - 2}`
+            } else {
+              const tx = endX
+              const ty = endY + 6
+              arrowPoints = `${tx},${ty - A} ${tx - B},${ty + 2} ${tx + B},${ty + 2}`
             }
 
             return (
-              <g key={`${edge.from}-${edge.to}`} className={pathClass}>
-                {/* Glow path behind completed edges */}
+              <g key={`${edge.from}-${edge.to}`}>
+                {/* Glow behind completed edges */}
                 {fromDone && (
                   <path
                     d={pathD}
                     fill="none"
-                    stroke="currentColor"
+                    stroke={strokeColor}
                     strokeWidth={strokeWidth + 4}
-                    className="opacity-20 blur-[3px]"
+                    opacity={0.15}
                   />
                 )}
-                {/* Core path */}
+                {/* Main path */}
                 <path
                   d={pathD}
                   fill="none"
-                  stroke="currentColor"
+                  stroke={strokeColor}
                   strokeWidth={strokeWidth}
-                  className={!fromDone && !isRunning ? "opacity-60 dark:opacity-40" : ""}
+                  opacity={!fromDone && !isRunning ? 0.5 : 1}
+                  className={animated ? 'animate-flow-path' : ''}
                 />
-                {/* Arrowhead polygon drawn inline (completely bypassing markers) */}
+                {/* Arrowhead */}
                 <polygon
                   points={arrowPoints}
-                  fill="currentColor"
-                  className={!fromDone && !isRunning ? "opacity-60 dark:opacity-40" : ""}
+                  fill={strokeColor}
+                  opacity={!fromDone && !isRunning ? 0.5 : 1}
                 />
               </g>
             )

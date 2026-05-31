@@ -308,6 +308,9 @@ async def send_triage_update(complaint, ai_draft: str) -> bool:
 
 
 async def start_all() -> None:
+    if os.getenv("DISABLE_CHANNEL_POLLING", "").lower() == "true":
+        logger.info("Channel polling is disabled via DISABLE_CHANNEL_POLLING env variable.")
+        return
     for channel in _registry.values():
         if channel.enabled:
             try:

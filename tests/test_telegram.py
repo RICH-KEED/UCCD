@@ -27,6 +27,15 @@ def mock_redis():
         yield mock_r
 
 
+@pytest.fixture(autouse=True)
+def mock_db():
+    mock_session = MagicMock()
+    mock_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = None
+    with patch("services.channels.telegram.get_db") as mock_get_db:
+        mock_get_db.return_value = iter([mock_session])
+        yield mock_session
+
+
 def make_channel():
     from services.channels.telegram import TelegramChannel, UserSession
 
