@@ -18,6 +18,15 @@ const rolesConfig: { role: UserRole; label: string; icon: React.ReactNode }[] = 
 ]
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
+const DEMO_PASSWORDS: Record<UserRole, string> = {
+  AGENT: 'union@123',
+  SUPERVISOR: 'Test@123',
+  COMPLIANCE: 'Test@123',
+}
+const DEMO_EMAILS: Partial<Record<UserRole, string>> = {
+  SUPERVISOR: 'supervisor@example.com',
+  COMPLIANCE: 'compliance@example.com',
+}
 
 export function LoginPage() {
   const { login, isAuthenticated, user } = useAuth()
@@ -40,13 +49,13 @@ export function LoginPage() {
         .then((data) => {
           setAgents(data.agents ?? [])
           setEmail('')
-          setPassword('')
+          setPassword(DEMO_PASSWORDS.AGENT)
         })
         .catch(() => setAgents([]))
         .finally(() => setLoadingAgents(false))
     } else {
-      setEmail('')
-      setPassword('')
+      setEmail(DEMO_EMAILS[selectedRole] ?? '')
+      setPassword(DEMO_PASSWORDS[selectedRole])
     }
   }, [selectedRole])
 
@@ -224,7 +233,7 @@ export function LoginPage() {
                             value={email}
                             onChange={(e) => {
                               setEmail(e.target.value)
-                              setPassword('')
+                              setPassword(DEMO_PASSWORDS.AGENT)
                               setError('')
                             }}
                             required
