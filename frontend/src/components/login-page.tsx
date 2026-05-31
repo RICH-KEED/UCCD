@@ -34,7 +34,7 @@ export function LoginPage() {
 
   const [selectedRole, setSelectedRole] = useState<UserRole>('AGENT')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [password, setPassword] = useState(DEMO_PASSWORDS.AGENT)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -47,11 +47,19 @@ export function LoginPage() {
       fetch(`${API_BASE_URL}/api/v1/agents/list`)
         .then((r) => r.json())
         .then((data) => {
-          setAgents(data.agents ?? [])
-          setEmail('')
+          const list = data.agents ?? []
+          setAgents(list)
+          if (list.length > 0) {
+            setEmail(list[0].email)
+          } else {
+            setEmail('')
+          }
           setPassword(DEMO_PASSWORDS.AGENT)
         })
-        .catch(() => setAgents([]))
+        .catch(() => {
+          setAgents([])
+          setPassword(DEMO_PASSWORDS.AGENT)
+        })
         .finally(() => setLoadingAgents(false))
     } else {
       setEmail(DEMO_EMAILS[selectedRole] ?? '')
