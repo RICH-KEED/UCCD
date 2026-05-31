@@ -86,6 +86,7 @@ def create_complaint(complaint: ComplaintCreate,background_tasks: BackgroundTask
             "status": db_complaint.status,
             "channel": db_complaint.channel,
             "customer_id": db_complaint.customer_id,
+            "raw_text": db_complaint.raw_text,
         },
     )
 
@@ -340,13 +341,12 @@ def bulk_auto_assign_complaints(
             assignments[cid] = None
             failed += 1
             continue
-        if complaint.assigned_to:
-            assignments[cid] = complaint.assigned_to
-            assigned += 1
-            continue
 
         complaint_type = complaint.complaint_type
-        dept = target_department or None
+        dept = target_department
+        if dept == "auto_detect":
+            dept = None
+
         agent = None
         if dept:
             dept_agents = [email for email, d in AGENT_DEPARTMENT_MAP.items() if d == dept.lower()]
@@ -359,19 +359,42 @@ def bulk_auto_assign_complaints(
                     agent = eligible[0][0]
 
         if not agent:
-            agent = auto_assign_complaint(db, cid, complaint_type=complaint_type)
+            from services.agent_service import get_best_agent
+            agent = get_best_agent(db, complaint_type=complaint_type, exclude_agent=complaint.assigned_to)
 
         if agent:
+            old_agent = complaint.assigned_to
             complaint.assigned_to = agent
             if complaint.status in ("queued", "new"):
                 complaint.status = "new"
             db.commit()
             db.refresh(complaint)
+
+            # Broadcast assignment event to update UI in real-time
+            try:
+                from datetime import datetime, timezone
+                from api.websocket import broadcast_event
+                broadcast_event(
+                    {
+                        "type": "complaint_assigned",
+                        "ts": datetime.now(timezone.utc).isoformat(),
+                        "complaint_id": str(complaint.id),
+                        "agent": agent,
+                        "from": old_agent or "unassigned",
+                        "to": agent,
+                    }
+                )
+            except Exception:
+                pass
+
             assignments[cid] = agent
             assigned += 1
         else:
-            assignments[cid] = None
-            failed += 1
+            assignments[cid] = complaint.assigned_to
+            if complaint.assigned_to:
+                assigned += 1
+            else:
+                failed += 1
 
     return {"assigned": assigned, "failed": failed, "assignments": assignments}
 
@@ -472,26 +495,47 @@ async def request_user_details(
     db.commit()
     db.refresh(complaint)
 
+    # Broadcast WebSocket event to update UI immediately
+    try:
+        broadcast_event({
+            "type": "complaint_details_updated",
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "complaint_id": str(complaint.id),
+        })
+    except Exception:
+        pass
+
     default_message = (
         "Thank you for reaching out. To help us process your complaint faster, "
         "could you please provide your full name, email address, phone number, and account number?"
     )
 
+    translated_message = None
     try:
         from services.translation_service import SarvamTranslationService, TranslationStage
         svc = SarvamTranslationService()
         target_lang = complaint.detected_language or complaint.language_code or "en-IN"
-        result = await svc.translate(
-            text=default_message,
-            stage=TranslationStage.PREVIEW,
-            target_lang=target_lang,
-        )
-        return {
-            "message": default_message,
-            "translated_message": result.get("translated_text"),
-        }
+        if target_lang != "en-IN":
+            result = await svc.translate(
+                text=default_message,
+                stage=TranslationStage.PREVIEW,
+                target_lang=target_lang,
+            )
+            translated_message = result.get("translated_text")
     except Exception:
-        return {"message": default_message}
+        pass
+
+    # Actually send to the customer's channel!
+    try:
+        from services.channels import send_response
+        await send_response(complaint, default_message)
+    except Exception as e:
+        print(f"Failed to send details request to channel: {e}")
+
+    return {
+        "message": default_message,
+        "translated_message": translated_message or default_message,
+    }
 
 
 @router.put("/{complaint_id}/details", response_model=ComplaintResponse)

@@ -148,6 +148,7 @@ def save_fallback_db(chat_id: int, text: str):
             "status": "queued",
             "channel": "Telegram",
             "customer_id": f"TG_{chat_id}",
+            "raw_text": text,
         })
 
         # Launch pipeline thread

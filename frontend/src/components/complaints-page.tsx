@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DataTable, multiColumnFilterFn, valueInArrayFilterFn } from '@/components/ui/data-table'
@@ -242,7 +243,7 @@ export function ComplaintsPage({ defaultSearch = '', sidebarActiveItem }: { defa
   const [replyDraft, setReplyDraft] = useState('')
   const [selectedRows, setSelectedRows] = useState<Row<MappedComplaint>[]>([])
   const [assignDialogOpen, setAssignDialogOpen] = useState(false)
-  const [assignDepartment, setAssignDepartment] = useState('')
+  const [assignDepartment, setAssignDepartment] = useState('auto_detect')
   const [assigning, setAssigning] = useState(false)
   const [departments, setDepartments] = useState<string[]>([])
 
@@ -284,7 +285,7 @@ export function ComplaintsPage({ defaultSearch = '', sidebarActiveItem }: { defa
     if (ids.length === 0) return
     setAssigning(true)
     try {
-      const dept = assignDepartment || undefined
+      const dept = assignDepartment === 'auto_detect' || !assignDepartment ? undefined : assignDepartment
       const result = await api.autoAssign(ids, dept)
       toast({
         title: 'Assignment complete',
@@ -679,6 +680,9 @@ export function ComplaintsPage({ defaultSearch = '', sidebarActiveItem }: { defa
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Assign {selectedRows.length} complaint{selectedRows.length !== 1 ? 's' : ''}</DialogTitle>
+            <DialogDescription className="sr-only">
+              Assign the selected complaints to a department or let AI auto-assign them.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
@@ -688,7 +692,7 @@ export function ComplaintsPage({ defaultSearch = '', sidebarActiveItem }: { defa
                   <SelectValue placeholder="Auto-detect from complaint type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Auto-detect</SelectItem>
+                  <SelectItem value="auto_detect">Auto-detect</SelectItem>
                   {departments.map((d) => (
                     <SelectItem key={d} value={d} className="capitalize">{d}</SelectItem>
                   ))}
