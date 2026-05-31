@@ -104,6 +104,24 @@ class SarvamTranslationService:
                 "translation_status": "skipped",
             }
 
+        if "\n" in text:
+            lines = text.split("\n")
+            async def translate_line(line: str) -> dict:
+                if not line.strip():
+                    return {"translated_text": line, "translation_status": "success"}
+                return await self.translate(line, stage, target_lang, source_lang)
+
+            results = await asyncio.gather(*(translate_line(l) for l in lines))
+            translated_lines = [r.get("translated_text", "") for r in results]
+            first_success = next((r for r in results if r.get("translation_status") == "success" and r.get("model_used")), {})
+            return {
+                "translated_text": "\n".join(translated_lines),
+                "detected_language": first_success.get("detected_language"),
+                "model_used": first_success.get("model_used"),
+                "mode_used": first_success.get("mode_used"),
+                "translation_status": "success",
+            }
+
         route = self._route(stage, target_lang)
         if source_lang:
             route["source_language_code"] = source_lang

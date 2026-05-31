@@ -341,13 +341,12 @@ def bulk_auto_assign_complaints(
             assignments[cid] = None
             failed += 1
             continue
-        if complaint.assigned_to:
-            assignments[cid] = complaint.assigned_to
-            assigned += 1
-            continue
 
         complaint_type = complaint.complaint_type
-        dept = target_department or None
+        dept = target_department
+        if dept == "auto_detect":
+            dept = None
+
         agent = None
         if dept:
             dept_agents = [email for email, d in AGENT_DEPARTMENT_MAP.items() if d == dept.lower()]
@@ -360,19 +359,42 @@ def bulk_auto_assign_complaints(
                     agent = eligible[0][0]
 
         if not agent:
-            agent = auto_assign_complaint(db, cid, complaint_type=complaint_type)
+            from services.agent_service import get_best_agent
+            agent = get_best_agent(db, complaint_type=complaint_type, exclude_agent=complaint.assigned_to)
 
         if agent:
+            old_agent = complaint.assigned_to
             complaint.assigned_to = agent
             if complaint.status in ("queued", "new"):
                 complaint.status = "new"
             db.commit()
             db.refresh(complaint)
+
+            # Broadcast assignment event to update UI in real-time
+            try:
+                from datetime import datetime, timezone
+                from api.websocket import broadcast_event
+                broadcast_event(
+                    {
+                        "type": "complaint_assigned",
+                        "ts": datetime.now(timezone.utc).isoformat(),
+                        "complaint_id": str(complaint.id),
+                        "agent": agent,
+                        "from": old_agent or "unassigned",
+                        "to": agent,
+                    }
+                )
+            except Exception:
+                pass
+
             assignments[cid] = agent
             assigned += 1
         else:
-            assignments[cid] = None
-            failed += 1
+            assignments[cid] = complaint.assigned_to
+            if complaint.assigned_to:
+                assigned += 1
+            else:
+                failed += 1
 
     return {"assigned": assigned, "failed": failed, "assignments": assignments}
 
