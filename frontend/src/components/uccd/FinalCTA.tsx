@@ -20,7 +20,14 @@ export function FinalCTA() {
           </p>
           <div className="mt-8 flex justify-center gap-4">
             <PrimaryButton onClick={() => navigate('login')}>Request demo</PrimaryButton>
-            <Link href="/login" className="inline-flex h-10 cursor-pointer items-center justify-center rounded-full border border-border px-4 text-sm font-medium text-text transition hover:border-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+            <Link
+              href="/login"
+              onClick={(e) => {
+                e.preventDefault()
+                navigate('login')
+              }}
+              className="inline-flex h-10 cursor-pointer items-center justify-center rounded-full border border-border px-4 text-sm font-medium text-text transition hover:border-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
               Login
             </Link>
           </div>

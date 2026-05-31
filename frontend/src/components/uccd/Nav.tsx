@@ -79,7 +79,14 @@ export function Nav() {
             <span className={theme === 'dark' ? 'text-text' : undefined}>Dark</span>
           </div>
           <PrimaryButton className="hidden sm:inline-flex" onClick={() => navigate('login')}>Request demo</PrimaryButton>
-          <Link href="/login" className="hidden sm:inline-flex h-10 cursor-pointer items-center justify-center rounded-full border border-border px-4 text-sm font-medium text-text transition hover:border-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+          <Link
+            href="/login"
+            onClick={(e) => {
+              e.preventDefault()
+              navigate('login')
+            }}
+            className="hidden sm:inline-flex h-10 cursor-pointer items-center justify-center rounded-full border border-border px-4 text-sm font-medium text-text transition hover:border-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
             Login
           </Link>
         </div>
