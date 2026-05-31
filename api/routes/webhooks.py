@@ -126,7 +126,7 @@ async def _process_email_direct(from_addr: str, subject: str, body_text: str, me
     complaint_payload = {
         "customer_id": from_addr,
         "channel": "email",
-        "source_ref": message_id or from_addr,
+        "source_ref": from_addr,
         "raw_text": f"Subject: {subject}\n\n{body_text}",
         "bot_slots": {"email_subject": subject, "message_id": message_id},
     }
