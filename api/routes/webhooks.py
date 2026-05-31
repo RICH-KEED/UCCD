@@ -314,6 +314,72 @@ async def mailgun_inbound(request: Request, db: Session = Depends(get_db)):
         sanitized_text = guard_report.sanitized_text
         logger.info(f"Email sanitized — from={from_addr}, risk={guard_report.risk_score:.2f}")
 
+    # Check if there is an unresolved complaint for this customer awaiting details
+    from api.models.complaint import Complaint
+    pending_complaint = (
+        db.query(Complaint)
+        .filter(Complaint.customer_id == from_addr)
+        .filter(Complaint.status != "resolved")
+        .filter(Complaint.awaiting_details == True)
+        .order_by(Complaint.created_at.desc())
+        .first()
+    )
+    if pending_complaint:
+        from services.channels import extract_details_llm
+        details = extract_details_llm(sanitized_text)
+        updated_fields = []
+        if details.get("name"):
+            pending_complaint.customer_name = details["name"]
+            updated_fields.append("name")
+        if details.get("phone"):
+            pending_complaint.customer_phone = details["phone"]
+            updated_fields.append("phone")
+        if details.get("email"):
+            pending_complaint.customer_email = details["email"]
+            updated_fields.append("email")
+        if details.get("account_no"):
+            pending_complaint.account_number = details["account_no"]
+            updated_fields.append("account number")
+
+        if updated_fields:
+            pending_complaint.awaiting_details = False
+            db.commit()
+            db.refresh(pending_complaint)
+
+            try:
+                from api.websocket import broadcast_event
+                broadcast_event({
+                    "type": "complaint_details_updated",
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                    "complaint_id": str(pending_complaint.id),
+                })
+            except Exception:
+                pass
+
+            from services.channels import get_channel
+            channel = get_channel("email")
+            if channel and channel.enabled:
+                msg = f"Thank you. Your details ({', '.join(updated_fields)}) have been updated for Ticket ID {pending_complaint.id}."
+                target_lang = pending_complaint.detected_language or pending_complaint.language_code or "en-IN"
+                if target_lang != "en-IN":
+                    try:
+                        from services.translation_service import SarvamTranslationService, TranslationStage
+                        svc = SarvamTranslationService()
+                        res = await svc.translate(msg, TranslationStage.PREVIEW, target_lang)
+                        msg = res.get("translated_text", msg)
+                    except Exception:
+                        pass
+                await channel.send_message(
+                    from_addr,
+                    msg,
+                    subject=f"Details Updated — #{str(pending_complaint.id)[:8]}",
+                )
+
+            event.processed = True
+            event.processed_at = datetime.now(timezone.utc)
+            db.commit()
+            return {"status": "details_updated", "complaint_id": str(pending_complaint.id)}
+
     try:
         conv_mode = _is_email_conversation_mode()
         logger.info(f"[EMAIL_WEBHOOK] Conversation mode={conv_mode}")
@@ -381,6 +447,68 @@ async def openwa_callback(request: Request, db: Session = Depends(get_db)):
             event.error_message = "Missing required fields (chatId/body)"
             db.commit()
             return {"status": "ignored", "reason": "missing_fields"}
+
+        # Check if there is an unresolved complaint for this customer awaiting details
+        from api.models.complaint import Complaint
+        pending_complaint = (
+            db.query(Complaint)
+            .filter(Complaint.customer_id == (sender or f"WA_{chat_id}"))
+            .filter(Complaint.status != "resolved")
+            .filter(Complaint.awaiting_details == True)
+            .order_by(Complaint.created_at.desc())
+            .first()
+        )
+        if pending_complaint:
+            from services.channels import extract_details_llm
+            details = extract_details_llm(text)
+            updated_fields = []
+            if details.get("name"):
+                pending_complaint.customer_name = details["name"]
+                updated_fields.append("name")
+            if details.get("phone"):
+                pending_complaint.customer_phone = details["phone"]
+                updated_fields.append("phone")
+            if details.get("email"):
+                pending_complaint.customer_email = details["email"]
+                updated_fields.append("email")
+            if details.get("account_no"):
+                pending_complaint.account_number = details["account_no"]
+                updated_fields.append("account number")
+
+            if updated_fields:
+                pending_complaint.awaiting_details = False
+                db.commit()
+                db.refresh(pending_complaint)
+
+                try:
+                    from api.websocket import broadcast_event
+                    broadcast_event({
+                        "type": "complaint_details_updated",
+                        "ts": datetime.now(timezone.utc).isoformat(),
+                        "complaint_id": str(pending_complaint.id),
+                    })
+                except Exception:
+                    pass
+
+                from services.channels import get_channel
+                channel = get_channel("whatsapp")
+                if channel and channel.enabled:
+                    msg = f"Thank you. Your details ({', '.join(updated_fields)}) have been updated for Ticket ID {pending_complaint.id}."
+                    target_lang = pending_complaint.detected_language or pending_complaint.language_code or "en-IN"
+                    if target_lang != "en-IN":
+                        try:
+                            from services.translation_service import SarvamTranslationService, TranslationStage
+                            svc = SarvamTranslationService()
+                            res = await svc.translate(msg, TranslationStage.PREVIEW, target_lang)
+                            msg = res.get("translated_text", msg)
+                        except Exception:
+                            pass
+                    await channel.send_message(chat_id, msg)
+
+                event.processed = True
+                event.processed_at = datetime.now(timezone.utc)
+                db.commit()
+                return {"status": "details_updated", "complaint_id": str(pending_complaint.id)}
 
         if _is_whatsapp_conversation_mode():
             result = await _process_whatsapp_conversation(
