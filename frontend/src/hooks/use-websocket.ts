@@ -13,7 +13,10 @@ import type { WebSocketEvent } from '@/types/complaint'
 const WS_BASE_URL: string = (() => {
   const envUrl = process.env.NEXT_PUBLIC_WS_BASE_URL
   if (envUrl !== undefined && envUrl !== '') return envUrl
-  // Both local and preview: WebSocket always connects directly to the backend
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    return `${protocol}//${window.location.host}/api/v1`
+  }
   return 'ws://localhost:8000/api/v1'
 })()
 const RECONNECT_DELAY_MS = 3000

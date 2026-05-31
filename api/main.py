@@ -2,6 +2,7 @@ import asyncio
 import uuid
 import time
 import logging
+import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes.complaints import router as complaints_router
@@ -93,7 +94,22 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Customer Complaint Management API", version="1.0", lifespan=lifespan)
 
-allow_origins = ["http://localhost:5173", "http://localhost:3000"]
+
+def _cors_origins() -> list[str]:
+    raw = os.getenv("CORS_ORIGINS")
+    if raw:
+        return [origin.strip() for origin in raw.split(",") if origin.strip()]
+    return [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "https://omniresol.me",
+        "https://www.omniresol.me",
+        "http://omniresol.me",
+        "http://www.omniresol.me",
+    ]
+
+
+allow_origins = _cors_origins()
 
 @app.middleware("http")
 async def request_logging_middleware(request: Request, call_next):

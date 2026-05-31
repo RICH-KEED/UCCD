@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/use-auth'
-import { api } from '@/lib/api-client'
+import { api, API_BASE_URL } from '@/lib/api-client'
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_BASE_URL || 'ws://localhost:8000/api/v1'
+const WS_URL = process.env.NEXT_PUBLIC_WS_BASE_URL || ''
 
 const PIPELINE_STAGES = [
   { id: 'translation', label: 'Translation', icon: '🌐', x: 280, y: 30 },
@@ -222,7 +222,8 @@ export function PipelineShowcasePage() {
   }
 
   const connectWS = useCallback(() => {
-    const ws = new WebSocket(`${WS_URL}/ws/supervisor`)
+    const wsBase = WS_URL || `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/v1`
+    const ws = new WebSocket(`${wsBase}/ws/supervisor`)
     wsRef.current = ws
     ws.onopen = () => setIsConnected(true)
     ws.onclose = () => setIsConnected(false)
@@ -260,7 +261,7 @@ export function PipelineShowcasePage() {
     setSubmitting(true); setError('')
     try {
       const token = localStorage.getItem('uccd.access_token')
-      const res = await fetch(`http://localhost:8888/api/v1/complaints`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/complaints`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ customer_id: `test-${Date.now()}`, raw_text: text, channel }),
       })

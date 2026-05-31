@@ -32,12 +32,7 @@ const API_BASE_URL: string = (() => {
   const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL
   if (envUrl !== undefined && envUrl !== '') return envUrl
 
-  // 2. Preview server: browser must call backend directly (server-side proxy can't reach localhost)
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return 'http://localhost:8888'
-  }
-
-  // 3. Local development: use same-origin proxy through Next.js API route
+  // 2. Use same-origin proxy through the Next.js API route
   return ''
 })()
 const TOKEN_KEY = 'uccd.access_token'
