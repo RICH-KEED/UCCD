@@ -168,6 +168,59 @@ class TelegramChannel(BaseChannel):
             return False
 
     def _handle_update(self, chat_id: int, text_strip: str, base_url: str) -> None:
+        db = next(get_db())
+        try:
+            from api.models.complaint import Complaint
+            pending_complaint = (
+                db.query(Complaint)
+                .filter(Complaint.customer_id == f"TG_{chat_id}")
+                .filter(Complaint.status != "resolved")
+                .filter(Complaint.awaiting_details == True)
+                .order_by(Complaint.created_at.desc())
+                .first()
+            )
+            if pending_complaint:
+                details = extract_details_llm(text_strip)
+                updated_fields = []
+                if details.get("name"):
+                    pending_complaint.customer_name = details["name"]
+                    updated_fields.append("name")
+                if details.get("phone"):
+                    pending_complaint.customer_phone = details["phone"]
+                    updated_fields.append("phone")
+                if details.get("email"):
+                    pending_complaint.customer_email = details["email"]
+                    updated_fields.append("email")
+                if details.get("account_no"):
+                    pending_complaint.account_number = details["account_no"]
+                    updated_fields.append("account number")
+
+                if updated_fields:
+                    pending_complaint.awaiting_details = False
+                    db.commit()
+                    db.refresh(pending_complaint)
+
+                    try:
+                        from api.websocket import broadcast_event
+                        broadcast_event({
+                            "type": "complaint_details_updated",
+                            "ts": datetime.now(timezone.utc).isoformat(),
+                            "complaint_id": str(pending_complaint.id),
+                        })
+                    except Exception:
+                        pass
+
+                    msg = self._get_localized_text(
+                        f"Thank you. Your details ({', '.join(updated_fields)}) have been updated for Ticket ID `{pending_complaint.id}`.",
+                        UserSession(language_code=self._detect_language(text_strip))
+                    )
+                    self._send_telegram(chat_id, msg)
+                    return
+        except Exception as e:
+            logger.error(f"Error checking pending details in telegram: {e}")
+        finally:
+            db.close()
+
         session_raw = _get_tg_session(chat_id)
 
         if session_raw is None:
